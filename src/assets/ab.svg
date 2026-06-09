@@ -1,0 +1,15 @@
+<svg width="100%" viewBox="0 0 1200 281.33" xmlns="http://www.w3.org/2000/svg"><defs><mask id="imagine-text-gaps-2ctjmn" maskUnits="userSpaceOnUse"><rect x="0" y="0" width="1200" height="281.33" fill="white"/><rect x="26" y="-12.013663291931152" width="1149.154296875" height="285.350830078125" fill="black" rx="2"/></mask></defs>
+  
+
+  <!-- Large ticket shape covering full text width -->
+  <g opacity="0.15" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.15;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
+    <path d="M0 55 Q0 10 40 10 L1160 10 Q1200 10 1200 55 Q1150 75 1150 140 Q1150 205 1200 225 Q1200 270 1160 270 L40 270 Q0 270 0 225 Q50 205 50 140 Q50 75 0 55 Z" fill="#e50914" style="fill:rgb(229, 9, 20);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+    <line x1="600" y1="10" x2="600" y2="270" stroke="#ffffff" stroke-width="10" stroke-dasharray="22,14" mask="url(#imagine-text-gaps-2ctjmn)" style="fill:rgb(0, 0, 0);stroke:rgb(255, 255, 255);color:rgb(255, 255, 255);stroke-width:10px;stroke-dasharray:22px, 14px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  </g>
+
+  <!-- Text on top -->
+  <text x="30" y="210" font-size="200" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Poppins, Montserrat, Arial, sans-serif;font-size:200px;font-weight:900;text-anchor:start;dominant-baseline:auto">
+    <tspan style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Poppins, Montserrat, Arial, sans-serif;font-size:200px;font-weight:900;text-anchor:start;dominant-baseline:auto">Ticket</tspan><tspan style="fill:rgb(229, 9, 20);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Poppins, Montserrat, Arial, sans-serif;font-size:200px;font-weight:900;text-anchor:start;dominant-baseline:auto">Hub</tspan>
+  </text>
+
+</svg>

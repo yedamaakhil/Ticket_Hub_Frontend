@@ -1,0 +1,17 @@
+<svg width="100%" viewBox="0 0 1800 550" xmlns="http://www.w3.org/2000/svg"><defs><mask id="imagine-text-gaps-f57q22" maskUnits="userSpaceOnUse"><rect x="0" y="0" width="1800" height="550" fill="white"/><rect x="46" y="-27" width="1654.59375" height="414" fill="black" rx="2"/></mask></defs>
+  
+
+  <!-- Ticket icon watermark -->
+  <g transform="translate(1100, 320) rotate(-45) scale(3.5)" opacity="0.08" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.08;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
+    <g transform="translate(-200,-150)" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
+      <path d="M0 100 Q0 50 50 50 L350 50 Q400 50 400 100 Q360 120 360 150 Q360 180 400 200 Q400 250 350 250 L50 250 Q0 250 0 200 Q40 180 40 150 Q40 120 0 100 Z" fill="#e50914" style="fill:rgb(229, 9, 20);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+      <line x1="200" y1="60" x2="200" y2="240" stroke="#ffffff" stroke-width="14" stroke-dasharray="20,14" mask="url(#imagine-text-gaps-f57q22)" style="fill:rgb(0, 0, 0);stroke:rgb(255, 255, 255);color:rgb(255, 255, 255);stroke-width:14px;stroke-dasharray:20px, 14px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+    </g>
+  </g>
+
+  <!-- Text with padding so T is not cut -->
+  <text x="50" y="295" font-size="290" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Poppins, Montserrat, Arial, sans-serif;font-size:290px;font-weight:900;text-anchor:start;dominant-baseline:auto">
+    <tspan style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Poppins, Montserrat, Arial, sans-serif;font-size:290px;font-weight:900;text-anchor:start;dominant-baseline:auto">Ticket</tspan><tspan style="fill:rgb(229, 9, 20);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Poppins, Montserrat, Arial, sans-serif;font-size:290px;font-weight:900;text-anchor:start;dominant-baseline:auto">Hub</tspan>
+  </text>
+
+</svg>
