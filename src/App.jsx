@@ -19,7 +19,7 @@ import Payment from './AllPages/Payment';
 import MyBookings from './AllPages/MyBookings';
 import MyShows from './AllPages/MyShows';
 import Theaters from './AllPages/Theaters';
-import AddMovie from './AllPages/Admin/AddMovie';
+import AddMovie from './AllPages/Admin/Addmovie';
 import ListMovies from './AllPages/Admin/ListMovies';
 import ListBookings from './AllPages/Admin/ListBookings';
 
