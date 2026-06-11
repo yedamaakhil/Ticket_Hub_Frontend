@@ -1,0 +1,28 @@
+[
+  {
+    "id": "846b5da3-d7f7-4f39-90b1-594d45da7c92",
+    "bookingRef": "TKT-MQ9QG7EL-VAXQ",
+    "transactionId": "TXN-82F60D52",
+    "clerkUserId": "user_test123",
+    "movieId": "1",
+    "showDate": "2026-06-15",
+    "showTime": "14:30",
+    "seats": [
+      "A1",
+      "A2"
+    ],
+    "totalPrice": 500,
+    "paymentMethod": "ONLINE",
+    "razorpayPaymentId": "",
+    "movieTitle": "Test Movie",
+    "moviePosterPath": "",
+    "movieGenres": "Action",
+    "movieRuntime": null,
+    "movieLanguage": "",
+    "theaterName": "AVD Cinemas",
+    "screenName": "Screen 1",
+    "userEmail": "test@example.com",
+    "status": "CONFIRMED",
+    "createdAt": "2026-06-11T16:49:32.541Z"
+  }
+]

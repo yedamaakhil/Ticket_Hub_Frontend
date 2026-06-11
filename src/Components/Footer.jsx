@@ -7,7 +7,7 @@ function Footer() {
         {/* Brand Section */}
         <div className="lg:col-span-3 space-y-6">
           <a href="https://prebuiltui.com" className="block">
-            <img className='h-25 w-80' src={assets.a} alt="" />
+            <img className='h-16 sm:h-20 md:h-25 w-48 sm:w-64 md:w-80 max-w-full object-contain' src={assets.a} alt="TicketHub" />
           </a>
           <p className="text-sm/6 text-neutral-300 max-w-96">TicketHub helps you Books your tickets faster than ever before. Easy & Convenient also have a great selection of movies and shows.
           <br /> Enjoy the best movie experience! </p>

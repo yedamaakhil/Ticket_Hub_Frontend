@@ -50,7 +50,7 @@ function Favourite() {
   }
 
   return favouriteMovies.length > 0 ? (
-    <div className='relative my-40 mb-60 px-6 md:px-16 lg:px-40 xl:px-44 overflow-hidden min-h-[80vh]'>
+    <div className='relative my-24 sm:my-40 mb-40 sm:mb-60 px-4 sm:px-6 md:px-16 lg:px-40 xl:px-44 overflow-hidden min-h-[80vh]'>
       <div className="flex items-center gap-3 mb-8">
         <HeartIcon className="w-8 h-8 text-red-500 fill-red-500" />
         <h1 className="text-3xl font-bold text-gray-200">

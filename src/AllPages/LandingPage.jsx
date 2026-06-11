@@ -29,22 +29,22 @@ function LandingPage() {
     <div className="min-h-screen flex flex-col bg-black text-white">
 
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 md:px-20 py-5
+      <nav className="flex items-center justify-between px-4 sm:px-8 md:px-20 py-4 sm:py-5
       border-b border-white/10 bg-black/50 backdrop-blur fixed top-0 w-full z-50">
-        <div className="flex items-center gap-2">
-          <img src={assets.a} alt="TicketHub" className="h-9 w-auto" />
+        <div className="flex items-center gap-2 shrink-0">
+          <img src={assets.a} alt="TicketHub" className="h-8 sm:h-9 w-auto" />
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3">
           <button
             onClick={handleSignIn}
-            className="px-5 py-2 text-sm border border-white/20 rounded-full
+            className="px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm border border-white/20 rounded-full
             hover:bg-white/10 transition cursor-pointer"
           >
             Login
           </button>
           <button
             onClick={handleSignIn}
-            className="px-5 py-2 text-sm bg-primary hover:bg-primary-dull
+            className="px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm bg-primary hover:bg-primary-dull
             rounded-full transition cursor-pointer font-medium"
           >
             Sign Up
@@ -62,7 +62,7 @@ function LandingPage() {
           #1 Movie Ticket Booking Platform
         </span>
 
-        <h1 className="text-5xl md:text-7xl font-extrabold leading-tight max-w-3xl">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold leading-tight max-w-3xl px-2">
           Book Movie Tickets <br />
           <span className="text-primary">Instantly.</span>
         </h1>

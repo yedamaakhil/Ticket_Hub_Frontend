@@ -59,7 +59,7 @@ function DateSelection({ dateTime, id }) {
                 </div>
                 <button 
                     onClick={onBookHandler} 
-                    className='bg-primary text-white px-8 py-2 mt-6 rounded hover:bg-primary/90 transition-all cursor-pointer'
+                    className='bg-primary text-white px-8 py-2.5 mt-4 sm:mt-6 rounded-full hover:bg-primary/90 transition-all cursor-pointer w-full sm:w-auto'
                 >
                     Book Now
                 </button>

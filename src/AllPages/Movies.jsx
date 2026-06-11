@@ -6,7 +6,7 @@ function Movies() {
   const { movies } = useMovies();
   
   return movies.length > 0 ? (
-    <div className='relative my-40 mb-60 px-6 md:px-16 lg:px-40 xl:px-44 overflow-hidden min-h-[80vh]' >
+    <div className='relative my-24 sm:my-40 mb-40 sm:mb-60 px-4 sm:px-6 md:px-16 lg:px-40 xl:px-44 overflow-hidden min-h-[80vh]' >
           <h1 className="text-3xl font-bold text-gray-200 mb-8" >All Movies</h1><br /><br />   
           <BlurCircle top="80px" right="-10px" /> 
           <BlurCircle bottom="400px" left="-10px" /> 

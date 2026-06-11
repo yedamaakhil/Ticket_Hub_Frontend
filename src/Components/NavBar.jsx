@@ -121,8 +121,8 @@ function NavBar() {
       <div className='fixed top-5 left-0 z-50 w-full flex items-center 
         justify-between px-6 md:px-16 lg:px-36 py-5'>
         
-        <Link to='/' className='max-md:flex-1'>
-          <img src={assets.a} alt="Logo" className='w-90 h-auto' />
+        <Link to='/' className='max-md:flex-1 shrink-0'>
+          <img src={assets.a} alt="Logo" className='w-36 sm:w-48 md:w-60 lg:w-72 h-auto' />
         </Link>
 
         <div className={`max-md:absolute max-md:top-0 max-md:left-0 max-md:font-medium
@@ -144,16 +144,17 @@ function NavBar() {
           <Link onClick={() => { window.scrollTo(0, 0); setIsMenuOpen(false) }} to='/contact'>Contact Us</Link>
         </div>
 
-        <div className='flex items-center gap-8 relative' ref={searchRef}>
-          {/* Search Icon */}
+        <div className='flex items-center gap-3 sm:gap-8 relative' ref={searchRef}>
+          {/* Search Icon — visible on all screens */}
           <SearchIcon 
-            className='max-md:hidden w-6 h-6 cursor-pointer hover:scale-110 transition-transform' 
+            className='w-5 h-5 sm:w-6 sm:h-6 cursor-pointer hover:scale-110 transition-transform shrink-0' 
             onClick={handleSearchClick}
           />
 
           {/* Search Modal/Dropdown */}
           {isSearchOpen && (
-            <div className='absolute top-full right-0 mt-2 w-96 bg-black/95 backdrop-blur-lg 
+            <div className='fixed sm:absolute inset-x-4 sm:inset-x-auto top-20 sm:top-full sm:right-0 sm:mt-2 
+              w-auto sm:w-80 md:w-96 bg-black/95 backdrop-blur-lg 
               rounded-lg border border-gray-300/30 shadow-2xl overflow-hidden z-50
               animate-in slide-in-from-top-2 duration-200'>
               

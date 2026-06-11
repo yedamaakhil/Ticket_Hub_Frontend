@@ -183,7 +183,7 @@ function SeatsSelecting() {
                   onClick={() => handleSeatClick(seatId)}
                   disabled={isBooked}
                   title={isBooked ? `Seat ${seatId} - Already Booked` : `Seat ${seatId} - ${seatPricing[tier].label} - ₹${getSeatPrice(row)}`}
-                  className={`h-8 w-8 rounded border text-xs font-medium transition-all duration-200
+                  className={`h-7 w-7 sm:h-8 sm:w-8 rounded border text-[10px] sm:text-xs font-medium transition-all duration-200
                     ${isBooked
                       ? "border-red-500/40 bg-red-500/20 text-red-400/50 cursor-not-allowed line-through"
                       : isSelected
@@ -275,7 +275,7 @@ function SeatsSelecting() {
   }
 
   return show ? (
-    <div className='flex flex-col md:flex-row px-6 md:px-16 lg:px-40 py-30 md:pt-50 gap-8'>
+    <div className='flex flex-col md:flex-row px-4 sm:px-6 md:px-16 lg:px-40 py-24 sm:py-30 md:pt-50 gap-6 sm:gap-8'>
       {/* Show Timings Sidebar */}
       <div className='w-full md:w-72 bg-primary/10 border border-primary/20 rounded-xl py-6 h-max md:sticky md:top-30'>
         <div className="px-6 pb-3 border-b border-primary/20">
@@ -451,7 +451,7 @@ function SeatsSelecting() {
           type="button"
           onClick={handleProceed}
           disabled={selectedSeats.length === 0 || !selectedTime}
-          className={`flex items-center gap-2 mt-8 px-8 py-3 text-sm rounded-full font-medium 
+          className={`flex items-center justify-center gap-2 mt-8 px-6 sm:px-8 py-3 text-sm rounded-full font-medium w-full sm:w-auto
             transition-all duration-200 active:scale-95
             ${selectedSeats.length > 0 && selectedTime
               ? "bg-primary hover:bg-primary-dull cursor-pointer shadow-lg shadow-primary/30"

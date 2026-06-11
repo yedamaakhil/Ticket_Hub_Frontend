@@ -117,6 +117,12 @@ function Payment() {
                         ?? user?.emailAddresses?.[0]?.emailAddress
                         ?? "";
 
+      if (!primaryEmail) {
+        toast.error("No email on your account — add an email in your profile to receive tickets.", { id: loadingToast });
+        setIsProcessing(false);
+        return;
+      }
+
       const payload = {
         movieId:           movie.id,
         showDate:          selectedDate,
@@ -131,9 +137,10 @@ function Payment() {
         movieGenres:       movie.genres?.map(g => g.name).join(", ") ?? "",
         movieRuntime:      movie.runtime,
         movieLanguage:     movie.original_language ?? "Telugu",
-        theaterName:       movie.theater ?? "Cineplex",
-        screenName:        movie.screen  ? `Screen ${movie.screen}` : "Screen 1",
+        theaterName:       selectedTime.theater ?? movie.theater ?? "Cineplex",
+        screenName:        selectedTime.screen ? `Screen ${selectedTime.screen}` : "Screen 1",
         userEmail:         primaryEmail,
+        clerkUserId:       user?.id ?? "",
       };
 
       const res = await fetch(`${API_BASE}/api/bookings`, {
@@ -156,9 +163,16 @@ function Payment() {
       }
 
       const data = await res.json();
-      toast.success("Booking confirmed! 🎉 Check your email.", {
-        id: loadingToast, duration: 3000,
-      });
+
+      if (data.emailSent) {
+        toast.success("Booking confirmed! 🎉 Ticket sent to your email.", {
+          id: loadingToast, duration: 3000,
+        });
+      } else {
+        toast.success("Booking confirmed! 🎉 (Email could not be sent — check My Bookings)", {
+          id: loadingToast, duration: 4000,
+        });
+      }
 
       setTimeout(() => {
         navigate("/my-bookings/confirmation", {
@@ -167,6 +181,10 @@ function Payment() {
             totalPrice:    grandTotal,
             bookingRef:    data.bookingRef,
             transactionId: data.transactionId,
+            bookingId:     data.id,
+            userEmail:     primaryEmail,
+            emailSent:     data.emailSent,
+            emailPreviewUrl: data.emailPreviewUrl,
           },
         });
       }, 1500);
@@ -183,7 +201,7 @@ function Payment() {
   //  RENDER
   // ─────────────────────────────────────────────
   return (
-    <div className="px-6 md:px-16 lg:px-40 py-30 md:pt-40 min-h-screen">
+    <div className="px-4 sm:px-6 md:px-16 lg:px-40 py-24 sm:py-30 md:pt-40 min-h-screen">
       <BlurCircle top="0" left="0" />
       <BlurCircle bottom="0" right="0" />
 
@@ -226,11 +244,11 @@ function Payment() {
         <div className="flex-1 bg-primary/10 border border-primary/20 rounded-2xl overflow-hidden">
 
           {/* Movie */}
-          <div className="flex gap-5 p-6 border-b border-primary/20">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 p-4 sm:p-6 border-b border-primary/20">
             <img
               src={movie.poster_path}
               alt={movie.title}
-              className="w-28 h-40 object-cover rounded-xl flex-shrink-0"
+              className="w-full sm:w-28 h-48 sm:h-40 object-cover rounded-xl flex-shrink-0 mx-auto sm:mx-0 max-w-[200px] sm:max-w-none"
             />
             <div className="flex flex-col justify-center gap-2">
               <h2 className="text-xl font-bold text-white">{movie.title}</h2>

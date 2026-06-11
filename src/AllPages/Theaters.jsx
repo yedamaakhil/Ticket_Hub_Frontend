@@ -214,13 +214,13 @@ const Theaters = () => {
                         </span>
                       )}
                     </h2>
-                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-3">
-                      <MapPinIcon className="w-4 h-4" />
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-400 text-sm mb-3">
+                      <MapPinIcon className="w-4 h-4 shrink-0" />
                       <span>{theater.location}, {theater.city} - {theater.pinCode}</span>
                       <span className="text-primary">• {theater.distance}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-4">
-                      <ClockIcon className="w-4 h-4" />
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-400 text-sm mb-4">
+                      <ClockIcon className="w-4 h-4 shrink-0" />
                       <span>{theater.timings}</span>
                       <span className="text-primary">• {theater.priceRange}</span>
                     </div>

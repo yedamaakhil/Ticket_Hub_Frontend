@@ -15,6 +15,11 @@
 body {
     color: white;
     background-color: #090909;
+    overflow-x: hidden;
+}
+
+html {
+    overflow-x: hidden;
 }
 
 .no-scrollbar{

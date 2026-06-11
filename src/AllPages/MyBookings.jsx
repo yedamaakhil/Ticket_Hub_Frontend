@@ -56,7 +56,7 @@ export default function MyBookings() {
 
   if (loading)
     return (
-      <div style={{ paddingTop: "80px" }} className="flex items-center justify-center min-h-screen">
+      <div className="pt-20 sm:pt-24 flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-gray-400 text-sm">Loading your bookings...</p>
@@ -66,14 +66,14 @@ export default function MyBookings() {
 
   if (error)
     return (
-      <div style={{ paddingTop: "80px" }} className="flex items-center justify-center min-h-screen">
-        <p className="text-red-300 text-5xl">No Bookings available..........</p>
+      <div className="pt-20 sm:pt-24 flex items-center justify-center min-h-screen px-4">
+        <p className="text-red-300 text-lg sm:text-2xl text-center">No bookings available. Is the server running?</p>
       </div>
     );
 
   if (bookings.length === 0)
     return (
-      <div style={{ paddingTop: "80px" }} className="flex flex-col items-center justify-center min-h-screen gap-3">
+      <div className="pt-20 sm:pt-24 flex flex-col items-center justify-center min-h-screen gap-3 px-4">
         <span className="text-6xl">🎟️</span>
         <h3 className="text-gray-300 font-semibold text-lg">No bookings yet</h3>
         <p className="text-gray-500 text-sm">Your booked tickets will appear here.</p>
@@ -81,10 +81,10 @@ export default function MyBookings() {
     );
 
   return (
-    <div style={{ paddingTop: "150px" }} className="max-w-5xl mx-auto px-4 pb-12">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray mt-1">My Bookings...</h2>
-      </div><br />
+    <div className="pt-24 sm:pt-32 md:pt-36 max-w-5xl mx-auto px-4 pb-12">
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray mt-1">My Bookings</h2>
+      </div>
 
       <div className="flex flex-col gap-5">
         {bookings.map((booking) => (

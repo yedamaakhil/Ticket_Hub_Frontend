@@ -8,7 +8,7 @@ function MovieCard({ movie }) {
 
   return (
     <div className='flex flex-col justify-between p-3 bg-gray-800 rounded-2xl
-    hover:-translate-y-1 transition duration-300 w-66' >
+    hover:-translate-y-1 transition duration-300 w-full sm:w-66 max-w-sm mx-auto sm:mx-0' >
 
       <img onClick={() => {navigate(`/movie-details/${movie.id}`); scrollTo(0, 0);}} 
       src={movie.backdrop_path} alt="" className='rounded-lg h-52 w-full object-cover

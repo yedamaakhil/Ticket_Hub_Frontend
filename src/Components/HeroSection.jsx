@@ -7,16 +7,16 @@ function HeroSection() {
     const navigate = useNavigate();
 
     return (
-        <div className='flex flex-col items-start justify-center gap-4 px-6 md:px-16 lg:px-36 
-        bg-[url("/popcornImage.png")] bg-cover bg-center h-screen'>
-            <img src={assets.marvelLogo} alt="" className='max-h-11 lg:h-11 mt-20' />
-            <h1 className='text-5xl md:text-[60px] md:leading-18 font-bold max-w-150 text-start text-white'>
+        <div className='flex flex-col items-start justify-center gap-4 px-4 sm:px-6 md:px-16 lg:px-36 
+        bg-[url("/popcornImage.png")] bg-cover bg-center min-h-screen sm:h-screen py-24 sm:py-0'>
+            <img src={assets.marvelLogo} alt="" className='max-h-9 sm:max-h-11 lg:h-11 mt-16 sm:mt-20' />
+            <h1 className='text-3xl sm:text-4xl md:text-5xl lg:text-[60px] md:leading-18 font-bold max-w-150 text-start text-white'>
                 Your Movie Adventure <br /> Starts Here
             </h1>
 
-            <div className='flex items-center gap-4 text-sm text-gray-300 font-medium'>
-                <ClapperboardIcon/>
-                <span className='font-extrabold tracking-wider' > Action | Adventure | Comedy | Drama | Suspense | Thrillers..</span>
+            <div className='flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-300 font-medium flex-wrap'>
+                <ClapperboardIcon className="shrink-0 w-4 h-4 sm:w-5 sm:h-5"/>
+                <span className='font-extrabold tracking-wider'> Action | Adventure | Comedy | Drama | Suspense | Thrillers..</span>
             </div>
 
             <p className='text-lg text-gray-300 text-start max-w-2xl'>

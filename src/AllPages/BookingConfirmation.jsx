@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BlurCircle from '../Components/BlurCircle';
 import IsoTimeFormate from '../lib/IsoTimeFormate';
+import { API_BASE } from '../lib/config';
 import {
   CalendarIcon,
   ClockIcon,
@@ -9,8 +10,10 @@ import {
   CheckCircleIcon,
   HomeIcon,
   DownloadIcon,
+  MailIcon,
 } from 'lucide-react';
 import BookingBarcode from '../Components/BookingBarcode';
+import toast from 'react-hot-toast';
 
 const timeFormat = (mins) => {
   if (!mins) return "N/A";
@@ -96,6 +99,8 @@ function ConfirmationTaxBreakdown({ totalPrice, selectedSeats, getSeatTier, seat
 function BookingConfirmation() {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const [resending, setResending] = useState(false);
+  const [emailSent, setEmailSent] = useState(state?.emailSent ?? false);
 
   if (!state) {
     return (
@@ -121,7 +126,30 @@ function BookingConfirmation() {
     totalPrice,
     bookingRef,
     transactionId,
+    bookingId,
+    userEmail,
+    emailPreviewUrl,
   } = state;
+
+  const handleResendEmail = async () => {
+    if (!bookingId) return;
+    setResending(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/bookings/${bookingId}/resend-email`, { method: "POST" });
+      const data = await res.json();
+      if (data.emailSent) {
+        setEmailSent(true);
+        toast.success("Ticket email sent!");
+        if (data.emailPreviewUrl) console.log("Email preview:", data.emailPreviewUrl);
+      } else {
+        toast.error(data.emailError || "Failed to send email");
+      }
+    } catch {
+      toast.error("Could not resend email — is the server running?");
+    } finally {
+      setResending(false);
+    }
+  };
 
   const seatPricing = {
     economy:  { rows: ["A","B"],                                price: 150, label: "Economy"  },
@@ -149,7 +177,7 @@ function BookingConfirmation() {
   });
 
   return (
-    <div className="px-6 md:px-16 lg:px-40 py-30 md:pt-40 min-h-screen">
+    <div className="px-4 sm:px-6 md:px-16 lg:px-40 py-24 sm:py-30 md:pt-40 min-h-screen">
       <BlurCircle top="0"    left="0"  />
       <BlurCircle bottom="0" right="0" />
 
@@ -159,10 +187,18 @@ function BookingConfirmation() {
           <CheckCircleIcon className="w-10 h-10 text-green-400" />
         </div>
         <p className="text-green-400 text-sm font-medium">Payment Successful</p>
-        <h1 className="text-3xl font-bold mt-2">Booking Confirmed!</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mt-2">Booking Confirmed!</h1>
         <p className="text-gray-400 text-sm mt-2">
           Booking ID: <span className="text-primary font-semibold">{bookingRef}</span>
         </p>
+        {userEmail && (
+          <p className={`text-xs mt-2 flex items-center justify-center gap-1.5 ${emailSent ? "text-green-400" : "text-yellow-400"}`}>
+            <MailIcon className="w-3.5 h-3.5" />
+            {emailSent
+              ? `Ticket sent to ${userEmail}`
+              : `Email not sent — use Resend below`}
+          </p>
+        )}
         {transactionId && (
           <p className="text-gray-500 text-xs mt-1 font-mono">
             Transaction: {transactionId}
@@ -173,11 +209,11 @@ function BookingConfirmation() {
       <div className="max-w-lg mx-auto">
         <div className="bg-primary/10 border border-primary/20 rounded-2xl overflow-hidden">
 
-          <div className="flex gap-5 p-6 border-b border-primary/20">
+          <div className="flex gap-5 p-4 sm:p-6 border-b border-primary/20">
             <img
               src={movie.poster_path}
               alt={movie.title}
-              className="w-24 h-36 object-cover rounded-xl flex-shrink-0"
+              className="w-20 h-28 sm:w-24 sm:h-36 object-cover rounded-xl flex-shrink-0"
             />
             <div className="flex flex-col justify-center gap-2">
               <h2 className="text-lg font-bold text-white">{movie.title}</h2>
@@ -200,8 +236,8 @@ function BookingConfirmation() {
             <div className="w-6 h-6 rounded-full bg-black absolute -right-3" />
           </div>
 
-          <div className="px-6 py-5 space-y-4">
-            <div className="flex justify-between">
+          <div className="px-4 sm:px-6 py-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
               <div className="flex items-start gap-3">
                 <CalendarIcon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                 <div>
@@ -280,7 +316,7 @@ function BookingConfirmation() {
           </div>
         </div>
 
-        <div className="flex gap-4 mt-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6">
           <button
             onClick={() => { navigate('/'); scrollTo(0, 0); }}
             className="flex-1 flex items-center justify-center gap-2 py-3 
@@ -298,6 +334,18 @@ function BookingConfirmation() {
           >
             My Bookings
           </button>
+          {bookingId && userEmail && !emailSent && (
+            <button
+              onClick={handleResendEmail}
+              disabled={resending}
+              className="flex-1 flex items-center justify-center gap-2 py-3 
+              border border-green-500/40 hover:bg-green-500/10 text-sm font-medium 
+              rounded-full transition cursor-pointer active:scale-95 disabled:opacity-50"
+            >
+              <MailIcon className="w-4 h-4" />
+              {resending ? "Sending…" : "Resend Email"}
+            </button>
+          )}
           <button
             onClick={() => window.print()}
             className="flex-1 flex items-center justify-center gap-2 py-3 
