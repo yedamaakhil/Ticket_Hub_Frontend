@@ -65,19 +65,19 @@ const fmtTime = (t) => {
     if (!t) return "—";
     try {
         let hours, minutes;
-        
+
         // If it's a full ISO string or Date object
         if (typeof t === 'string' && (t.includes("T") || t.includes(":"))) {
             const date = new Date(t);
             if (!isNaN(date.getTime())) {
-                return date.toLocaleTimeString("en-IN", { 
-                    hour: "2-digit", 
+                return date.toLocaleTimeString("en-IN", {
+                    hour: "2-digit",
                     minute: "2-digit",
-                    hour12: true 
+                    hour12: true
                 });
             }
         }
-        
+
         // Handle "HH:MM" format (24-hour)
         if (typeof t === 'string' && t.match(/^\d{1,2}:\d{2}$/)) {
             [hours, minutes] = t.split(":").map(Number);
@@ -89,13 +89,13 @@ const fmtTime = (t) => {
         else {
             return String(t);
         }
-        
+
         if (isNaN(hours) || isNaN(minutes)) return String(t);
-        
+
         const period = hours >= 12 ? 'PM' : 'AM';
         let displayHours = hours % 12;
         displayHours = displayHours === 0 ? 12 : displayHours;
-        
+
         return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
     } catch (error) {
         console.error("Time formatting error:", error);
@@ -145,11 +145,15 @@ const resolveMovie = (movieId) => {
 // ─────────────────────────────────────────────
 //  STAT CARD
 // ─────────────────────────────────────────────
-function StatCard({ title, value, icon: Icon, accent = "text-primary", loading, tooltip, trend }) {
+function StatCard({ title, value, icon: Icon, accent = "text-primary", loading, tooltip, trend, onClick }) {
     return (
-        <div className="flex items-center justify-between px-5 py-4 bg-primary/10
+        <div
+            onClick={onClick}
+            className={`flex items-center justify-between px-5 py-4 bg-primary/10
                         border border-primary/20 rounded-xl flex-1 min-w-44
-                        hover:border-primary/40 transition group relative">
+                        hover:border-primary/40 transition group relative
+                        ${onClick ? "cursor-pointer hover:bg-primary/20" : ""}`}
+        >
             <div>
                 <p className="text-xs text-gray-400 mb-1 flex items-center gap-1">
                     {title}
@@ -168,12 +172,103 @@ function StatCard({ title, value, icon: Icon, accent = "text-primary", loading, 
                 <Icon className={`w-5 h-5 ${accent}`} />
             </div>
             {tooltip && (
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 
-                                bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1
+                                bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100
                                 transition-opacity pointer-events-none whitespace-nowrap z-10">
                     {tooltip}
                 </div>
             )}
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────
+//  USERS MODAL
+// ─────────────────────────────────────────────
+function UsersModal({ open, onClose, users, loading }) {
+    if (!open) return null;
+
+    const copyEmails = () => {
+        const emails = users.map((u) => u.email).filter(Boolean).join(", ");
+        if (!emails) {
+            toast.error("No emails to copy");
+            return;
+        }
+        navigator.clipboard.writeText(emails)
+            .then(() => toast.success("Emails copied to clipboard"))
+            .catch(() => toast.error("Failed to copy"));
+    };
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+            onClick={onClose}
+        >
+            <div
+                className="bg-[#1a1a1a] border border-primary/30 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="flex items-center justify-between p-5 border-b border-primary/20">
+                    <h3 className="text-white font-semibold flex items-center gap-2">
+                        <UsersIcon className="w-5 h-5 text-purple-400" />
+                        All Users ({users.length})
+                    </h3>
+                    <div className="flex items-center gap-2">
+                        {!loading && users.length > 0 && (
+                            <button
+                                onClick={copyEmails}
+                                className="text-xs bg-primary/20 hover:bg-primary/30 text-primary
+                                           px-3 py-1.5 rounded-lg transition cursor-pointer"
+                            >
+                                Copy emails
+                            </button>
+                        )}
+                        <button
+                            onClick={onClose}
+                            className="text-gray-400 hover:text-white transition cursor-pointer"
+                        >
+                            <XCircleIcon className="w-6 h-6" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="overflow-y-auto p-5 space-y-2">
+                    {loading ? (
+                        [...Array(5)].map((_, i) => (
+                            <div key={i} className="h-14 bg-primary/10 rounded-lg animate-pulse" />
+                        ))
+                    ) : users.length > 0 ? (
+                        users.map((u, i) => (
+                            <div
+                                key={u.id ?? u._id ?? i}
+                                className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/10
+                                           rounded-lg hover:bg-primary/10 transition"
+                            >
+                                <div className="w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center
+                                                text-purple-300 text-sm font-semibold flex-shrink-0">
+                                    {(u.name ?? u.email ?? "?").charAt(0).toUpperCase()}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-white text-sm font-medium truncate">
+                                        {u.name ?? "Unnamed user"}
+                                    </p>
+                                    <p className="text-gray-400 text-xs truncate">
+                                        {u.email ?? "—"}
+                                    </p>
+                                </div>
+                                {u.role && (
+                                    <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5
+                                                     rounded-full flex-shrink-0">
+                                        {u.role}
+                                    </span>
+                                )}
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-gray-500 text-sm text-center py-10">No users found</p>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }
@@ -316,6 +411,11 @@ function Dashboard() {
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(new Date());
 
+    // ── Users modal state ──
+    const [showUsersModal, setShowUsersModal] = useState(false);
+    const [users, setUsers] = useState([]);
+    const [usersLoading, setUsersLoading] = useState(false);
+
     // ── Fetch all dashboard data in parallel ──
     const loadAll = async () => {
         setLoading(true);
@@ -350,6 +450,29 @@ function Dashboard() {
         }
     };
 
+    // ── Fetch all users (for the Unique Users modal) ──
+    const loadUsers = async () => {
+        setUsersLoading(true);
+        try {
+            // Adjust this endpoint to match your backend (e.g. /users, /users/all, /admin/users)
+            const res = await fetch(`${API_URL}/users`);
+            if (!res.ok) throw new Error(`Users: ${res.status}`);
+            const data = await res.json();
+            setUsers(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error("Users load error:", err);
+            toast.error("Failed to load users");
+            setUsers([]);
+        } finally {
+            setUsersLoading(false);
+        }
+    };
+
+    const openUsersModal = () => {
+        setShowUsersModal(true);
+        loadUsers();
+    };
+
     useEffect(() => {
         loadAll();
         const interval = setInterval(loadAll, 60_000);
@@ -381,7 +504,7 @@ function Dashboard() {
     const occupancyBarColor = getOccupancyBarColor(occupancyRate);
 
     // Revenue per seat
-    const revenuePerSeat = totalSeatsBooked > 0 
+    const revenuePerSeat = totalSeatsBooked > 0
         ? Math.round((stats?.totalRevenue ?? 0) / totalSeatsBooked)
         : 0;
 
@@ -399,7 +522,7 @@ function Dashboard() {
         const totalSeats = getTotalSeatsForShow(show);
         return total + (ticketPrice * totalSeats);
     }, 0);
-    
+
     const revenueUtilization = totalRevenuePotential > 0
         ? Math.round(((stats?.totalRevenue ?? 0) / totalRevenuePotential) * 100)
         : 0;
@@ -481,7 +604,8 @@ function Dashboard() {
                         icon={UsersIcon}
                         accent="text-purple-400"
                         loading={loading}
-                        tooltip="Number of unique users who made bookings"
+                        tooltip="Click to view all user details"
+                        onClick={openUsersModal}
                     />
                     <StatCard
                         title="Active Shows"
@@ -723,6 +847,14 @@ function Dashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* ── Users Modal ── */}
+            <UsersModal
+                open={showUsersModal}
+                onClose={() => setShowUsersModal(false)}
+                users={users}
+                loading={usersLoading}
+            />
         </>
     );
 }
