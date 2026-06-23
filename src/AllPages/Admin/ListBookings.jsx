@@ -31,8 +31,8 @@ const fmtDate = (d) => {
         const date = new Date(d);
         if (isNaN(date.getTime())) return "—";
         return date.toLocaleDateString("en-IN", {
-            day: "2-digit", 
-            month: "short", 
+            day: "2-digit",
+            month: "short",
             year: "numeric",
         });
     } catch {
@@ -45,19 +45,19 @@ const fmtTime = (t) => {
     try {
         // Handle different time formats
         let hours, minutes;
-        
+
         // If it's a full ISO string or Date object
         if (t.includes("T") || t.includes(":")) {
             const date = new Date(t);
             if (!isNaN(date.getTime())) {
-                return date.toLocaleTimeString("en-IN", { 
-                    hour: "2-digit", 
+                return date.toLocaleTimeString("en-IN", {
+                    hour: "2-digit",
                     minute: "2-digit",
-                    hour12: true 
+                    hour12: true
                 });
             }
         }
-        
+
         // Handle "HH:MM" format (24-hour)
         if (t.match(/^\d{1,2}:\d{2}$/)) {
             [hours, minutes] = t.split(":").map(Number);
@@ -69,15 +69,15 @@ const fmtTime = (t) => {
         else {
             return t; // Return as-is if format unknown
         }
-        
+
         // Validate hours and minutes
         if (isNaN(hours) || isNaN(minutes)) return t;
-        
+
         // Convert to 12-hour format
         const period = hours >= 12 ? 'PM' : 'AM';
         let displayHours = hours % 12;
         displayHours = displayHours === 0 ? 12 : displayHours;
-        
+
         return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
     } catch (error) {
         console.error("Time formatting error:", error);
@@ -127,6 +127,7 @@ function StatPill({ label, value, color }) {
 // ─────────────────────────────────────────────
 function ListBookings() {
     const [bookings,   setBookings]   = useState([]);
+    const [usersMap,   setUsersMap]   = useState({});
     const [loading,    setLoading]    = useState(true);
     const [error,      setError]      = useState(null);
     const [search,     setSearch]     = useState("");
@@ -157,12 +158,36 @@ function ListBookings() {
         }
     };
 
+    // ── Fetch users (Clerk-resolved) and build a clerkUserId -> user map ──
+    const loadUsers = async () => {
+        try {
+            const res = await fetch(`${API_URL}/users`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const map = {};
+            (Array.isArray(data) ? data : []).forEach((u) => {
+                if (u.clerkUserId) map[u.clerkUserId] = u;
+            });
+            setUsersMap(map);
+        } catch (err) {
+            console.error("Users load error:", err);
+        }
+    };
+
+    // ── Resolve a display name for a booking ──
+    const getUserName = (booking) => {
+        const u = usersMap[booking.clerkUserId];
+        if (u && u.name) return u.name;
+        if (u && u.email) return u.email;
+        return "—";
+    };
+
     // ── Cancel a booking ──
     const handleCancel = async (booking) => {
         if (!window.confirm(`Are you sure you want to cancel booking #${booking.bookingRef}?\n\nThis action cannot be undone.`)) {
             return;
         }
-        
+
         setCancelling(booking.id);
         try {
             const res = await fetch(`${API_URL}/bookings/${booking.id}/cancel`, {
@@ -185,7 +210,10 @@ function ListBookings() {
         }
     };
 
-    useEffect(() => { loadBookings(); }, []);
+    useEffect(() => {
+        loadBookings();
+        loadUsers();
+    }, []);
 
     // ── Stats from live bookings ──
     const confirmedCount = bookings.filter((b) => b.status?.toUpperCase() === "CONFIRMED").length;
@@ -209,11 +237,13 @@ function ListBookings() {
         .filter((b) => {
             if (!search) return true;
             const q = search.toLowerCase();
+            const userName = getUserName(b).toLowerCase();
             return (
                 (b.bookingRef      ?? "").toLowerCase().includes(q) ||
                 (b.movieTitle      ?? "").toLowerCase().includes(q) ||
                 (b.clerkUserId     ?? "").toLowerCase().includes(q) ||
                 (b.theaterName     ?? "").toLowerCase().includes(q) ||
+                userName.includes(q) ||
                 (b.seats ?? []).some((s) => s.toLowerCase().includes(q))
             );
         });
@@ -226,28 +256,28 @@ function ListBookings() {
 
             {/* ── Stats Cards ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-                <StatCard 
-                    title="Total Bookings" 
-                    value={bookings.length} 
-                    icon={TicketIcon} 
+                <StatCard
+                    title="Total Bookings"
+                    value={bookings.length}
+                    icon={TicketIcon}
                     accent="text-primary"
                 />
-                <StatCard 
-                    title="Total Revenue" 
-                    value={fmtCurrency(totalRevenue)} 
-                    icon={IndianRupee} 
+                <StatCard
+                    title="Total Revenue"
+                    value={fmtCurrency(totalRevenue)}
+                    icon={IndianRupee}
                     accent="text-green-400"
                 />
-                <StatCard 
-                    title="Total Seats" 
-                    value={totalSeats} 
-                    icon={TicketIcon} 
+                <StatCard
+                    title="Total Seats"
+                    value={totalSeats}
+                    icon={TicketIcon}
                     accent="text-yellow-400"
                 />
-                <StatCard 
-                    title="Unique Users" 
-                    value={uniqueUsers} 
-                    icon={UsersIcon} 
+                <StatCard
+                    title="Unique Users"
+                    value={uniqueUsers}
+                    icon={UsersIcon}
                     accent="text-purple-400"
                 />
             </div>
@@ -283,7 +313,7 @@ function ListBookings() {
                     <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search by booking ref, movie, user, seat…"
+                        placeholder="Search by booking ref, movie, user, name, seat…"
                         className="w-full pl-9 pr-4 py-2 bg-primary/10 border border-primary/20
                                    rounded-full text-sm text-white placeholder-gray-500 outline-none
                                    focus:border-primary/50 transition"
@@ -304,7 +334,7 @@ function ListBookings() {
                 </div>
 
                 <button
-                    onClick={loadBookings}
+                    onClick={() => { loadBookings(); loadUsers(); }}
                     className="flex items-center gap-1.5 px-4 py-2 border border-primary/20
                                rounded-full text-xs text-gray-400 hover:text-white
                                hover:border-primary/50 transition cursor-pointer"
@@ -330,7 +360,7 @@ function ListBookings() {
                     <table className="w-full border-collapse rounded-xl overflow-hidden text-nowrap">
                         <thead>
                             <tr className="bg-primary/20 text-left text-white text-sm">
-                                <th className="p-3 pl-5 font-medium">Booking Ref</th>
+                                <th className="p-3 pl-5 font-medium">Booking Ref · User</th>
                                 <th className="p-3 font-medium">Movie</th>
                                 <th className="p-3 font-medium">Show Date</th>
                                 <th className="p-3 font-medium">Show Time</th>
@@ -356,11 +386,14 @@ function ListBookings() {
                                                 ? "bg-red-500/5 opacity-70"
                                                 : "bg-primary/5 even:bg-primary/10 hover:bg-primary/15"}`}
                                     >
-                                        {/* Booking Ref */}
+                                        {/* Booking Ref + User name */}
                                         <td className="p-3 pl-5">
                                             <span className="font-mono text-xs text-primary font-semibold">
                                                 {booking.bookingRef ?? `#${booking.id}`}
                                             </span>
+                                            <p className="text-white text-xs mt-0.5 max-w-40 truncate" title={getUserName(booking)}>
+                                                {getUserName(booking)}
+                                            </p>
                                             <p className="text-gray-600 text-[10px] mt-0.5">
                                                 {fmtDate(booking.createdAt)}
                                             </p>
@@ -393,7 +426,7 @@ function ListBookings() {
                                             {fmtDate(booking.showDate)}
                                         </td>
 
-                                        {/* Show Time - FIXED */}
+                                        {/* Show Time */}
                                         <td className="p-3 text-gray-300 text-xs whitespace-nowrap">
                                             {fmtTime(booking.showTime)}
                                         </td>

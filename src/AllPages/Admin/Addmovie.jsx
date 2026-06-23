@@ -28,6 +28,12 @@ import {
     getTotalMovieCount,
     updateMovie,
 } from "../../lib/movieStore";
+import {
+    THEATER_NAMES,
+    ALL_SCREEN_IDS,
+    SCREEN_CATALOG,
+    getScreenIdsForTheater,
+} from "../../lib/theaterConfig";
 
 // ─────────────────────────────────────────────
 //  CONSTANTS
@@ -43,8 +49,9 @@ const LANGUAGES = [
     "Malayalam", "Kannada", "Bengali", "Marathi",
 ];
 
-const THEATERS = ["AVD Cinemas", "PVR Cinemas", "INOX Leisure", "Cinepolis", "Carnival Cinemas"];
-const SCREENS  = ["1", "2", "3", "4", "IMAX", "4DX", "Dolby"];
+// Theaters + screens now come from the shared config (theaterConfig.js)
+const THEATERS = THEATER_NAMES;
+const DEFAULT_THEATER = THEATERS[0];
 
 // ─────────────────────────────────────────────
 //  HELPERS
@@ -66,8 +73,8 @@ const EMPTY_FORM = {
     tagline:            "",
     runtime:            "",
     vote_average:       "",
-    theater:            "AVD Cinemas",
-    screen:             "1",
+    theater:            DEFAULT_THEATER,
+    screen:             getScreenIdsForTheater(DEFAULT_THEATER)[0] || "1",
 };
 
 // ─────────────────────────────────────────────
@@ -197,11 +204,26 @@ function AddMovie() {
         setStoredMovies(getStoredMovies());
     }, []);
 
+    // Screens available for the currently selected theater
+    const availableScreenIds = getScreenIdsForTheater(form.theater);
+
     // ── Form field handler ──
     const set = (key) => (e) => {
         const val = e.target.value;
         setForm((f) => ({ ...f, [key]: val }));
         if (key === "poster_path") setPreviewImg(val || null);
+    };
+
+    // ── Theater change handler: also fix the screen if it's not valid for the new theater ──
+    const handleTheaterChange = (e) => {
+        const newTheater = e.target.value;
+        const screensForNew = getScreenIdsForTheater(newTheater);
+        setForm((f) => ({
+            ...f,
+            theater: newTheater,
+            // keep current screen if the new theater has it, else pick its first screen
+            screen: screensForNew.includes(f.screen) ? f.screen : (screensForNew[0] || ""),
+        }));
     };
 
     // ── Genre toggle ──
@@ -229,6 +251,9 @@ function AddMovie() {
         if (!form.runtime || Number(form.runtime) <= 0) { toast.error("Valid runtime required"); return false; }
         if (selectedGenres.length === 0){ toast.error("Select at least one genre");     return false; }
         if (!casts.some((c) => c.name.trim())) { toast.error("Add at least one cast member"); return false; }
+        if (!availableScreenIds.includes(form.screen)) {
+            toast.error("Selected screen is not available at this theater"); return false;
+        }
         return true;
     };
 
@@ -244,6 +269,12 @@ function AddMovie() {
 
     // ── Load movie data into form for editing ──
     const loadMovieForEdit = (movie) => {
+        const theaterForEdit = movie.theater || DEFAULT_THEATER;
+        const screensForEdit = getScreenIdsForTheater(theaterForEdit);
+        const screenForEdit = screensForEdit.includes(String(movie.screen))
+            ? String(movie.screen)
+            : (screensForEdit[0] || "");
+
         setForm({
             id:                 movie.id,
             title:              movie.title || "",
@@ -256,17 +287,17 @@ function AddMovie() {
             tagline:            movie.tagline || "",
             runtime:            movie.runtime || "",
             vote_average:       movie.vote_average || "",
-            theater:            movie.theater || "AVD Cinemas",
-            screen:             movie.screen || "1",
+            theater:            theaterForEdit,
+            screen:             screenForEdit,
         });
-        
+
         // Load genres
         if (movie.genres && Array.isArray(movie.genres)) {
             setSelectedGenres(movie.genres.map(g => g.name));
         } else {
             setSelectedGenres([]);
         }
-        
+
         // Load casts
         if (movie.casts && Array.isArray(movie.casts) && movie.casts.length > 0) {
             setCasts(movie.casts.map(cast => ({
@@ -277,11 +308,11 @@ function AddMovie() {
         } else {
             setCasts([{ name: "", character: "", profile_path: "" }]);
         }
-        
+
         setPreviewImg(movie.poster_path || null);
         setIsEditMode(true);
         setEditingMovieId(movie.id);
-        
+
         toast.success(`Editing "${movie.title}"`, { duration: 3000 });
     };
 
@@ -321,7 +352,7 @@ function AddMovie() {
         }
 
         let saved;
-        
+
         if (isEditMode && editingMovieId) {
             // Update existing movie
             saved = updateMovie(editingMovieId, movieData);
@@ -342,7 +373,7 @@ function AddMovie() {
         setStoredMovies(getStoredMovies());
         console.log("✅ Movie saved:", saved);
         console.log("📦 All movies now:", getAllMovies().length);
-        
+
         setSuccess(true);
         setSubmitting(false);
         setShowAdded(true);
@@ -586,14 +617,32 @@ function AddMovie() {
                         </div>
                         <div>
                             <label className="text-xs text-gray-400 mb-1.5 block">Theater</label>
-                            <select value={form.theater} onChange={set("theater")} className={`${inputCls} cursor-pointer`}>
+                            <select value={form.theater} onChange={handleTheaterChange} className={`${inputCls} cursor-pointer`}>
                                 {THEATERS.map((t) => <option key={t} value={t} className="bg-gray-900">{t}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs text-gray-400 mb-1.5 block">Screen</label>
+                            <label className="text-xs text-gray-400 mb-1.5 block">
+                                Screen
+                                <span className="text-gray-600 ml-1">
+                                    ({availableScreenIds.length} available at {form.theater})
+                                </span>
+                            </label>
                             <select value={form.screen} onChange={set("screen")} className={`${inputCls} cursor-pointer`}>
-                                {SCREENS.map((s) => <option key={s} value={s} className="bg-gray-900">Screen {s}</option>)}
+                                {ALL_SCREEN_IDS.map((id) => {
+                                    const available = availableScreenIds.includes(id);
+                                    const label = SCREEN_CATALOG[id]?.name || `Screen ${id}`;
+                                    return (
+                                        <option
+                                            key={id}
+                                            value={id}
+                                            disabled={!available}
+                                            className="bg-gray-900"
+                                        >
+                                            {label}{available ? "" : " — not at this theater"}
+                                        </option>
+                                    );
+                                })}
                             </select>
                         </div>
                     </div>
