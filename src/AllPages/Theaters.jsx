@@ -16,7 +16,7 @@ import {
 import BlurCircle from '../Components/BlurCircle';
 import { assets } from '../assets/assets';
 import { useMovies } from '../hooks/useMovies';
-import { THEATERS, getScreensForTheater } from '../../lib/theaterConfig';
+import { THEATERS, getScreensForTheater } from '../../lib/theaterdata';
 
 const Theaters = () => {
   const navigate = useNavigate();
