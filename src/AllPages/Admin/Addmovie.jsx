@@ -33,7 +33,7 @@ import {
     ALL_SCREEN_IDS,
     SCREEN_CATALOG,
     getScreenIdsForTheater,
-} from "../../lib/theaterConfig";
+} from "../../lib/theaterconfig";
 
 // ─────────────────────────────────────────────
 //  CONSTANTS
