@@ -560,43 +560,45 @@ export const findMovieById = (id) => {
     return dummyShowsData.find(movie => movie.id == id || movie._id == id);
 };
 
-export const dummyDateTimeData = {
-    "2026-04-10": [
-        { time: "10:00 AM", "showId": "1" },
-        { time: "1:30 PM", "showId": "2" },
-        { time: "4:00 PM", "showId": "3" },
-        { time: "6:30 PM", "showId": "4" }, 
-        { time: "9:00 PM", "showId": "5" }
-    ],
-    "2026-04-11": [
-        { time: "10:00 AM", "showId": "6" },
-        { time: "1:30 PM", "showId": "7" },
-        { time: "4:00 PM", "showId": "8" },
-        { time: "6:30 PM", "showId": "9" }, 
-        { time: "9:00 PM", "showId": "10" }
-    ],
-    "2026-04-12": [
-        { time: "10:00 AM", "showId": "1" },
-        { time: "1:30 PM", "showId": "2" },
-        { time: "4:00 PM", "showId": "3" },
-        { time: "6:30 PM", "showId": "4" }, 
-        { time: "9:00 PM", "showId": "5" }
-    ],
-    "2026-04-13": [
-        { time: "10:00 AM", "showId": "6" },
-        { time: "1:30 PM", "showId": "7" },
-        { time: "4:00 PM", "showId": "8" },
-        { time: "6:30 PM", "showId": "9" }, 
-        { time: "9:00 PM", "showId": "10" }
-    ],
-    "2026-04-14": [
-        { time: "10:00 AM", "showId": "1" },
-        { time: "1:30 PM", "showId": "2" },
-        { time: "4:00 PM", "showId": "3" },
-        { time: "6:30 PM", "showId": "4" }, 
-        { time: "9:00 PM", "showId": "5" }
-    ]
-}
+// Generates show dates starting from TODAY and rolling forward.
+// Same shape as before: { "YYYY-MM-DD": [{ time, showId }], ... }
+const generateUpcomingDateTimeData = (numDays = 5) => {
+    const timeSlotsA = [
+        { time: "10:00 AM", showId: "1" },
+        { time: "1:30 PM",  showId: "2" },
+        { time: "4:00 PM",  showId: "3" },
+        { time: "6:30 PM",  showId: "4" },
+        { time: "9:00 PM",  showId: "5" },
+    ];
+    const timeSlotsB = [
+        { time: "10:00 AM", showId: "6" },
+        { time: "1:30 PM",  showId: "7" },
+        { time: "4:00 PM",  showId: "8" },
+        { time: "6:30 PM",  showId: "9" },
+        { time: "9:00 PM",  showId: "10" },
+    ];
+
+    const data = {};
+    const today = new Date();
+
+    for (let i = 0; i < numDays; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+
+        // local YYYY-MM-DD (avoids timezone shifting the day)
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const key = `${y}-${m}-${day}`;
+
+        // alternate the two slot sets like your original data did
+        data[key] = i % 2 === 0 ? timeSlotsA : timeSlotsB;
+    }
+
+    return data;
+};
+
+export const dummyDateTimeData = generateUpcomingDateTimeData(5);
 
 export const dummyDashboardData = {
     "totalBookings": 28,
