@@ -28,12 +28,7 @@ import {
     getTotalMovieCount,
     updateMovie,
 } from "../../lib/movieStore";
-import {
-    THEATER_NAMES,
-    ALL_SCREEN_IDS,
-    SCREEN_CATALOG,
-    getScreenIdsForTheater,
-} from "../../lib/theaterconfig";
+import { THEATER_NAMES, ALL_SCREEN_IDS, SCREEN_CATALOG, getScreenIdsForTheater } from "../../lib/Theaterconfig";
 
 // ─────────────────────────────────────────────
 //  CONSTANTS
