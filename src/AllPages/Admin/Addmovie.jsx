@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Title from "../../Components/Admin/Title";
 import BlurCircle from "../../Components/BlurCircle";
 import {
@@ -49,9 +49,8 @@ const LANGUAGES = [
     "Malayalam", "Kannada", "Bengali", "Marathi",
 ];
 
-// Theaters + screens now come from the shared config (theaterConfig.js)
+// Theaters come from the shared config (theaterdata.js)
 const THEATERS = THEATER_NAMES;
-const DEFAULT_THEATER = THEATERS[0];
 
 // ─────────────────────────────────────────────
 //  HELPERS
@@ -59,22 +58,6 @@ const DEFAULT_THEATER = THEATERS[0];
 const timeFormat = (mins) => {
     if (!mins) return "";
     return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-};
-
-const EMPTY_FORM = {
-    id:                  "",
-    title:              "",
-    overview:           "",
-    poster_path:        "",
-    backdrop_path:      "",
-    trailerUrl:         "",
-    release_date:       "",
-    original_language:  "Telugu",
-    tagline:            "",
-    runtime:            "",
-    vote_average:       "",
-    theater:            DEFAULT_THEATER,
-    screen:             getScreenIdsForTheater(DEFAULT_THEATER)[0] || "1",
 };
 
 // ─────────────────────────────────────────────
@@ -185,27 +168,103 @@ function Section({ icon: Icon, title, children }) {
 const inputCls = "w-full px-3 py-2.5 bg-primary/10 border border-primary/20 rounded-lg text-sm text-white placeholder-gray-500 outline-none focus:border-primary/60 transition";
 
 // ─────────────────────────────────────────────
+//  OCCUPANCY HELPERS
+//  A screen is "occupied" if some movie already sits on that theater+screen.
+//  When editing, the movie being edited does NOT count as occupying its slot.
+// ─────────────────────────────────────────────
+const buildOccupancy = (allMovies, editingMovieId) => {
+    // Map: theaterName -> Set of occupied screen ids (as strings)
+    const map = {};
+    allMovies.forEach((m) => {
+        if (editingMovieId != null && String(m.id) === String(editingMovieId)) return; // skip self
+        if (!m.theater || m.screen == null) return;
+        const key = m.theater;
+        if (!map[key]) map[key] = new Set();
+        map[key].add(String(m.screen));
+    });
+    return map;
+};
+
+// Free screen ids for a theater = screens it has, minus occupied ones
+const getFreeScreenIds = (theaterName, occupancy) => {
+    const all = getScreenIdsForTheater(theaterName);
+    const taken = occupancy[theaterName] || new Set();
+    return all.filter((id) => !taken.has(String(id)));
+};
+
+// First theater that still has a free screen
+const firstTheaterWithFreeScreen = (occupancy) => {
+    for (const name of THEATERS) {
+        if (getFreeScreenIds(name, occupancy).length > 0) return name;
+    }
+    return THEATERS[0]; // fallback: everything full, just show the first
+};
+
+// ─────────────────────────────────────────────
 //  MAIN COMPONENT
 // ─────────────────────────────────────────────
 function AddMovie() {
-    const [form,           setForm]           = useState(EMPTY_FORM);
+    const [form,           setForm]           = useState(null); // set after computing free slot
     const [selectedGenres, setSelectedGenres] = useState([]);
     const [casts,          setCasts]          = useState([{ name: "", character: "", profile_path: "" }]);
     const [submitting,     setSubmitting]     = useState(false);
     const [success,        setSuccess]        = useState(false);
     const [previewImg,     setPreviewImg]     = useState(null);
     const [storedMovies,   setStoredMovies]   = useState([]);
+    const [allMovies,      setAllMovies]      = useState([]);
     const [showAdded,      setShowAdded]      = useState(false);
     const [isEditMode,     setIsEditMode]     = useState(false);
     const [editingMovieId, setEditingMovieId] = useState(null);
 
-    // Load admin-added movies from localStorage on mount
-    useEffect(() => {
+    // Occupancy of theater+screen slots (excludes the movie being edited)
+    const occupancy = useMemo(
+        () => buildOccupancy(allMovies, editingMovieId),
+        [allMovies, editingMovieId]
+    );
+
+    // Refresh movie data from store
+    const refreshMovies = () => {
         setStoredMovies(getStoredMovies());
+        setAllMovies(getAllMovies());
+    };
+
+    // Build a fresh empty form pointed at the first available free slot
+    const buildEmptyForm = () => {
+        const occ = buildOccupancy(getAllMovies(), null);
+        const theater = firstTheaterWithFreeScreen(occ);
+        const free = getFreeScreenIds(theater, occ);
+        return {
+            id: "",
+            title: "",
+            overview: "",
+            poster_path: "",
+            backdrop_path: "",
+            trailerUrl: "",
+            release_date: "",
+            original_language: "Telugu",
+            tagline: "",
+            runtime: "",
+            vote_average: "",
+            theater,
+            screen: free[0] || "",
+        };
+    };
+
+    // Load movies + initialise the form on mount
+    useEffect(() => {
+        refreshMovies();
+        setForm(buildEmptyForm());
     }, []);
 
-    // Screens available for the currently selected theater
-    const availableScreenIds = getScreenIdsForTheater(form.theater);
+    // Screens available (free) for the currently selected theater
+    const freeScreenIds = form ? getFreeScreenIds(form.theater, occupancy) : [];
+    // When editing, the movie's own current screen is also allowed
+    const allowedScreenIds = (() => {
+        if (!form) return [];
+        const set = new Set(freeScreenIds.map(String));
+        if (isEditMode && form.screen) set.add(String(form.screen)); // keep own slot selectable
+        return set;
+    })();
 
     // ── Form field handler ──
     const set = (key) => (e) => {
@@ -214,15 +273,14 @@ function AddMovie() {
         if (key === "poster_path") setPreviewImg(val || null);
     };
 
-    // ── Theater change handler: also fix the screen if it's not valid for the new theater ──
+    // ── Theater change handler: snap screen to a free one for the new theater ──
     const handleTheaterChange = (e) => {
         const newTheater = e.target.value;
-        const screensForNew = getScreenIdsForTheater(newTheater);
+        const free = getFreeScreenIds(newTheater, occupancy);
         setForm((f) => ({
             ...f,
             theater: newTheater,
-            // keep current screen if the new theater has it, else pick its first screen
-            screen: screensForNew.includes(f.screen) ? f.screen : (screensForNew[0] || ""),
+            screen: free.includes(f.screen) ? f.screen : (free[0] || ""),
         }));
     };
 
@@ -251,15 +309,16 @@ function AddMovie() {
         if (!form.runtime || Number(form.runtime) <= 0) { toast.error("Valid runtime required"); return false; }
         if (selectedGenres.length === 0){ toast.error("Select at least one genre");     return false; }
         if (!casts.some((c) => c.name.trim())) { toast.error("Add at least one cast member"); return false; }
-        if (!availableScreenIds.includes(form.screen)) {
-            toast.error("Selected screen is not available at this theater"); return false;
+        if (!form.screen) { toast.error("No free screen available — pick another theater"); return false; }
+        if (!allowedScreenIds.has(String(form.screen))) {
+            toast.error("That screen is already taken at this theater"); return false;
         }
         return true;
     };
 
     // ── Reset form ──
     const resetForm = () => {
-        setForm(EMPTY_FORM);
+        setForm(buildEmptyForm());
         setSelectedGenres([]);
         setCasts([{ name: "", character: "", profile_path: "" }]);
         setPreviewImg(null);
@@ -269,12 +328,7 @@ function AddMovie() {
 
     // ── Load movie data into form for editing ──
     const loadMovieForEdit = (movie) => {
-        const theaterForEdit = movie.theater || DEFAULT_THEATER;
-        const screensForEdit = getScreenIdsForTheater(theaterForEdit);
-        const screenForEdit = screensForEdit.includes(String(movie.screen))
-            ? String(movie.screen)
-            : (screensForEdit[0] || "");
-
+        const theaterForEdit = movie.theater || THEATERS[0];
         setForm({
             id:                 movie.id,
             title:              movie.title || "",
@@ -288,17 +342,15 @@ function AddMovie() {
             runtime:            movie.runtime || "",
             vote_average:       movie.vote_average || "",
             theater:            theaterForEdit,
-            screen:             screenForEdit,
+            screen:             String(movie.screen ?? ""),
         });
 
-        // Load genres
         if (movie.genres && Array.isArray(movie.genres)) {
             setSelectedGenres(movie.genres.map(g => g.name));
         } else {
             setSelectedGenres([]);
         }
 
-        // Load casts
         if (movie.casts && Array.isArray(movie.casts) && movie.casts.length > 0) {
             setCasts(movie.casts.map(cast => ({
                 name: cast.name || "",
@@ -322,7 +374,6 @@ function AddMovie() {
         if (!validate()) return;
         setSubmitting(true);
 
-        // Build movie object
         const movieData = {
             title:             form.title.trim(),
             overview:          form.overview.trim(),
@@ -354,7 +405,6 @@ function AddMovie() {
         let saved;
 
         if (isEditMode && editingMovieId) {
-            // Update existing movie
             saved = updateMovie(editingMovieId, movieData);
             if (saved) {
                 toast.success(`"${movieData.title}" updated successfully! 🎬`, { duration: 4000 });
@@ -364,13 +414,11 @@ function AddMovie() {
                 return;
             }
         } else {
-            // Add new movie
             saved = addMovie(movieData);
             toast.success(`"${movieData.title}" added! Visible to users now. 🎬`, { duration: 4000 });
         }
 
-        // Refresh stored list
-        setStoredMovies(getStoredMovies());
+        refreshMovies();
         console.log("✅ Movie saved:", saved);
         console.log("📦 All movies now:", getAllMovies().length);
 
@@ -378,7 +426,6 @@ function AddMovie() {
         setSubmitting(false);
         setShowAdded(true);
 
-        // Reset form after 2s
         setTimeout(() => {
             resetForm();
             setSuccess(false);
@@ -392,7 +439,7 @@ function AddMovie() {
         }
         const removed = removeMovie(id);
         if (removed) {
-            setStoredMovies(getStoredMovies());
+            refreshMovies();
             toast.success("Movie removed.");
             if (editingMovieId === id) {
                 resetForm();
@@ -407,6 +454,9 @@ function AddMovie() {
         resetForm();
         toast("Edit mode cancelled", { icon: "📝" });
     };
+
+    // Don't render until the form has been initialised
+    if (!form) return null;
 
     // ─────────────────────────────────────────
     //  RENDER
@@ -449,7 +499,7 @@ function AddMovie() {
                 <p className="text-gray-400 text-xs leading-relaxed">
                     {isEditMode 
                         ? "You are currently editing an existing movie. Make your changes and click 'Update Movie' to save."
-                        : "Movies you add here are saved to localStorage. They persist across page refreshes and are immediately visible to users."
+                        : "Each screen holds one movie. Theaters and screens that are already taken are disabled below — only free slots can be picked."
                     }
                 </p>
             </div>
@@ -618,28 +668,48 @@ function AddMovie() {
                         <div>
                             <label className="text-xs text-gray-400 mb-1.5 block">Theater</label>
                             <select value={form.theater} onChange={handleTheaterChange} className={`${inputCls} cursor-pointer`}>
-                                {THEATERS.map((t) => <option key={t} value={t} className="bg-gray-900">{t}</option>)}
+                                {THEATERS.map((t) => {
+                                    const freeCount = getFreeScreenIds(t, occupancy).length;
+                                    // theater is fully booked if it has no free screens (and, when editing,
+                                    // it's not the theater of the movie being edited)
+                                    const isCurrentEditTheater = isEditMode && t === form.theater;
+                                    const full = freeCount === 0 && !isCurrentEditTheater;
+                                    return (
+                                        <option key={t} value={t} disabled={full} className="bg-gray-900">
+                                            {t}{full ? " — fully booked" : ` (${freeCount} free)`}
+                                        </option>
+                                    );
+                                })}
                             </select>
                         </div>
                         <div>
                             <label className="text-xs text-gray-400 mb-1.5 block">
                                 Screen
                                 <span className="text-gray-600 ml-1">
-                                    ({availableScreenIds.length} available at {form.theater})
+                                    ({freeScreenIds.length} free at {form.theater})
                                 </span>
                             </label>
                             <select value={form.screen} onChange={set("screen")} className={`${inputCls} cursor-pointer`}>
-                                {ALL_SCREEN_IDS.map((id) => {
-                                    const available = availableScreenIds.includes(id);
+                                {form.screen === "" && (
+                                    <option value="" className="bg-gray-900">No free screen</option>
+                                )}
+                                {getScreenIdsForTheater(form.theater).map((id) => {
+                                    const hasScreen = true; // already filtered to this theater's screens
+                                    const isFree = freeScreenIds.includes(id);
+                                    const isOwnSlot = isEditMode && String(id) === String(form.screen);
+                                    const selectable = isFree || isOwnSlot;
                                     const label = SCREEN_CATALOG[id]?.name || `Screen ${id}`;
+                                    let suffix = "";
+                                    if (!isFree && !isOwnSlot) suffix = " — taken";
+                                    else if (isOwnSlot && !isFree) suffix = " — current";
                                     return (
                                         <option
                                             key={id}
                                             value={id}
-                                            disabled={!available}
+                                            disabled={!selectable}
                                             className="bg-gray-900"
                                         >
-                                            {label}{available ? "" : " — not at this theater"}
+                                            {label}{suffix}
                                         </option>
                                     );
                                 })}
