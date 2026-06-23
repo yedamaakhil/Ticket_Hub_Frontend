@@ -16,7 +16,7 @@ import {
 import BlurCircle from '../Components/BlurCircle';
 import { assets } from '../assets/assets';
 import { useMovies } from '../hooks/useMovies';
-import { THEATERS, getScreensForTheater } from "../lib/theaterdata";
+import { THEATERS, getScreensForTheater } from '../../lib/theaterConfig';
 
 const Theaters = () => {
   const navigate = useNavigate();
@@ -175,35 +175,25 @@ const Theaters = () => {
                     Available Screens ({theater.screens.length}):
                   </p>
                   <div className="flex flex-wrap gap-3">
-                    {theater.screens.map((screen) => {
-                      const movieCount = getMoviesForScreen(theater.name, screen.id).length;
-                      return (
-                        <button
-                          key={screen.id}
-                          onClick={(e) => handleScreenClick(theater, screen, e)}
-                          className={`group relative px-4 py-2 rounded-lg transition-all duration-200 ${
-                            selectedScreen?.id === screen.id && selectedTheater?.id === theater.id
-                              ? 'bg-primary text-white'
-                              : 'bg-primary/10 hover:bg-primary/20'
-                          }`}
-                        >
-                          <div className="text-left">
-                            <p className="text-sm font-semibold">
-                              {screen.name}
-                              {movieCount > 0 && (
-                                <span className="ml-1.5 text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded-full">
-                                  {movieCount}
-                                </span>
-                              )}
-                            </p>
-                            <p className="text-xs opacity-80">{screen.features.join(" • ")}</p>
-                            <p className="text-xs mt-1 opacity-70">Capacity: {screen.capacity}</p>
-                          </div>
-                          <ChevronRightIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 
-                          opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      );
-                    })}
+                    {theater.screens.map((screen) => (
+                      <button
+                        key={screen.id}
+                        onClick={(e) => handleScreenClick(theater, screen, e)}
+                        className={`group relative px-4 py-2 rounded-lg transition-all duration-200 ${
+                          selectedScreen?.id === screen.id && selectedTheater?.id === theater.id
+                            ? 'bg-primary text-white'
+                            : 'bg-primary/10 hover:bg-primary/20'
+                        }`}
+                      >
+                        <div className="text-left">
+                          <p className="text-sm font-semibold">{screen.name}</p>
+                          <p className="text-xs opacity-80">{screen.features.join(" • ")}</p>
+                          <p className="text-xs mt-1 opacity-70">Capacity: {screen.capacity}</p>
+                        </div>
+                        <ChevronRightIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 
+                        opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    ))}
                   </div>
                 </div>
 
