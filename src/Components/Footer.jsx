@@ -80,7 +80,7 @@ function Footer() {
             <h3 className="font-medium text-sm mb-4 text-white">Get in Touch</h3>
             <ul className="space-y-3 text-sm text-neutral-300">
               <li><a href="#" className="hover:text-red-400 transition-colors">+91 1234567890</a></li>
-              <li><a href="#" className="hover:text-red-400 transition-colors">support@tickethub.com</a></li>
+              <li><a href="#" className="hover:text-red-400 transition-colors">tickethub.online@gmail.com</a></li>
               <li>
                   <a href="https://www.google.com/maps/place/10000coders" className="hover:text-red-400 transition-colors">Road 3 Kphb | Hyderabad | <br /> Telangana | 500072 <br /> India</a>
               </li>
