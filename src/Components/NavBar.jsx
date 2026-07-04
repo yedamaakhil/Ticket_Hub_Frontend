@@ -107,7 +107,7 @@ function NavBar() {
     <>
       <div className='fixed top-0 left-0 z-50 w-full flex items-center
         justify-between gap-2 px-3 sm:px-6 md:px-16 lg:px-36 py-3 sm:py-4
-        bg-black/10 backdrop-blur border-b border-white/5'>
+        bg-black/5 backdrop-blur border-b border-white/5'>
 
         {/* Logo — same height-based sizing as LandingPage so it's visually identical everywhere */}
         <Link to='/' className='min-w-0 shrink flex items-center'>
