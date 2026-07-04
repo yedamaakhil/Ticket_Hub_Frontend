@@ -148,29 +148,33 @@ function MovieDetails() {
   return (
     <div className="px-4 sm:px-6 md:px-16 lg:px-40 pt-20 sm:pt-30 md:pt-40 lg:pt-50 pb-12">
 
-      {/* Trailer Modal — responsive: close button repositioned so it never
-          goes off-screen on mobile, modal width/padding scales properly */}
+      {/* Trailer Modal — fixed in middle of screen with responsive design */}
       {showTrailer && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm px-3 sm:px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-3 sm:p-4"
           onClick={handleCloseTrailer}
         >
           <div
-            className="relative w-full max-w-4xl mx-auto rounded-xl sm:rounded-2xl overflow-hidden"
+            className="relative w-full max-w-4xl mx-auto bg-black rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Close button - positioned to be visible on all screen sizes */}
             <button
               onClick={handleCloseTrailer}
-              className="absolute top-2 right-2 sm:-top-12 sm:right-0 p-2 bg-black/60 sm:bg-transparent
-              rounded-full sm:rounded-none text-white hover:text-primary transition-colors z-10"
+              className="absolute top-2 right-2 z-20 p-2 bg-black/70 hover:bg-black/90 rounded-full 
+                text-white hover:text-primary transition-colors duration-200
+                sm:top-4 sm:right-4 sm:p-3"
+              aria-label="Close trailer"
             >
               <XIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <div className="relative pt-[56.25%]">
+            
+            {/* Video container with 16:9 aspect ratio */}
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
               <iframe
-                src={`${trailerUrl}?autoplay=1&rel=0`}
+                src={`${trailerUrl}?autoplay=1&rel=0&controls=1&showinfo=0`}
                 title="Movie Trailer"
-                className="absolute top-0 left-0 w-full h-full rounded-lg"
+                className="absolute top-0 left-0 w-full h-full"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
