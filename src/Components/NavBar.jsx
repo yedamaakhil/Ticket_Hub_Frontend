@@ -109,7 +109,7 @@ function NavBar() {
         justify-between px-3 sm:px-6 md:px-16 lg:px-36 py-3 sm:py-5'>
 
         <Link to='/' className='max-md:flex-1 shrink-0'>
-          <img src={assets.a} alt="Logo" className='w-28 sm:w-48 md:w-60 lg:w-72 h-auto' />
+          <img src={assets.a} alt="Logo" className='w-36 sm:w-48 md:w-60 lg:w-72 h-auto' />
         </Link>
 
         <div className={`max-md:absolute max-md:top-0 max-md:left-0 max-md:font-medium
@@ -131,7 +131,7 @@ function NavBar() {
           <Link onClick={() => { window.scrollTo(0, 0); setIsMenuOpen(false) }} to='/contact'>Contact Us</Link>
         </div>
 
-        <div className='flex items-center gap-2 sm:gap-3 md:gap-8 relative' ref={searchRef}>
+        <div className='flex items-center gap-2 sm:gap-3 md:gap-8 relative shrink-0' ref={searchRef}>
           <SearchIcon
             className='w-5 h-5 sm:w-6 sm:h-6 cursor-pointer hover:scale-110 transition-transform shrink-0'
             onClick={handleSearchClick}
@@ -273,7 +273,7 @@ function NavBar() {
           {!user ? (
             <button onClick={openSignIn} className='px-3 py-1.5 sm:px-7 sm:py-2 bg-primary
               hover:bg-primary-dull transition rounded-full font-medium text-sm sm:text-base
-              cursor-pointer whitespace-nowrap'>Login</button>
+              cursor-pointer whitespace-nowrap shrink-0'>Login</button>
           ) : (
             <UserButton>
               <UserButton.MenuItems>
@@ -284,7 +284,7 @@ function NavBar() {
           )}
         </div>
 
-        <MenuIcon className='max-md:ml-2 sm:max-md:ml-4 md:hidden w-7 h-7 sm:w-8 sm:h-8 cursor-pointer'
+        <MenuIcon className='max-md:ml-2 sm:max-md:ml-4 md:hidden w-7 h-7 sm:w-8 sm:h-8 cursor-pointer shrink-0'
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         />
       </div>

@@ -27,23 +27,23 @@ function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
 
-      <nav className="flex items-center justify-between px-4 sm:px-8 md:px-20 py-3 sm:py-5
+      <nav className="flex items-center justify-between gap-2 px-3 sm:px-8 md:px-20 py-3 sm:py-5
       border-b border-white/10 bg-black/50 backdrop-blur fixed top-0 w-full z-50">
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 min-w-0">
           <img src={assets.a} alt="TicketHub" className="h-7 sm:h-9 w-auto" />
         </div>
-        <div className="flex gap-2 sm:gap-3">
+        <div className="flex gap-2 sm:gap-3 shrink-0">
           <button
             onClick={handleSignIn}
-            className="px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm border border-white/20 rounded-full
-            hover:bg-white/10 transition cursor-pointer"
+            className="px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm border border-white/30 rounded-full
+            hover:bg-white/10 transition cursor-pointer whitespace-nowrap text-white shrink-0"
           >
             Login
           </button>
           <button
             onClick={handleSignIn}
             className="px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm bg-primary hover:bg-primary-dull
-            rounded-full transition cursor-pointer font-medium"
+            rounded-full transition cursor-pointer font-medium whitespace-nowrap text-white shrink-0"
           >
             Sign Up
           </button>
@@ -82,14 +82,14 @@ function LandingPage() {
         <div className="mt-5 sm:mt-6">
           <button
             onClick={handleSignIn}
-            className="flex items-center gap-2 text-gray-400 hover:text-white
-            transition text-xs sm:text-sm group"
+            className="flex items-center gap-2 text-gray-300 hover:text-white
+            transition text-xs sm:text-sm group mx-auto"
           >
-            <LogInIcon className="w-4 h-4 group-hover:text-primary transition" />
+            <LogInIcon className="w-4 h-4 group-hover:text-primary transition shrink-0" />
             <span>Already have an account? Sign In</span>
-            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition" />
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition shrink-0" />
           </button>
-          <p className="text-gray-500 text-xs mt-2">
+          <p className="text-gray-500 text-xs mt-2 px-4">
             Sign in to save your bookings and get personalized recommendations
           </p>
         </div>

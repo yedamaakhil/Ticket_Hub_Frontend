@@ -268,33 +268,31 @@ function SeatsSelecting() {
 
   return show ? (
     <div className='flex flex-col md:flex-row px-3 sm:px-6 md:px-16 lg:px-40 py-20 sm:py-30 md:pt-50 gap-5 sm:gap-8'>
-      {/* Show Timings Sidebar */}
+      {/* Show Timings Sidebar — always vertical, full-width list on mobile */}
       <div className='w-full md:w-72 bg-primary/10 border border-primary/20 rounded-xl py-5 sm:py-6 h-max md:sticky md:top-30'>
         <div className="px-4 sm:px-6 pb-3 border-b border-primary/20">
           <p className='text-base sm:text-lg font-semibold'>Show Timings</p>
           <p className='text-xs text-gray-400 mt-1'>{date}</p>
         </div>
-        <div className='mt-4 space-y-1 overflow-x-auto md:overflow-visible'>
-          <div className="flex md:flex-col gap-2 md:gap-0 px-4 md:px-0">
-            {show.dateTime[date]?.map((item) => (
-              <div
-                key={item.time}
-                onClick={() => setSelectedTime(item)}
-                className={`flex items-center gap-3 px-4 sm:px-6 py-3 shrink-0 md:w-full cursor-pointer rounded-lg md:rounded-none
-                transition-all duration-200 ${
-                  selectedTime?.time === item.time
-                    ? "bg-primary text-white shadow-lg"
-                    : "hover:bg-primary/20 bg-white/5 md:bg-transparent"
-                }`}
-              >
-                <ClockIcon className='w-4 h-4 shrink-0' />
-                <div className="whitespace-nowrap md:whitespace-normal">
-                  <p className='text-sm font-medium'>{item.displayTime || item.time}</p>
-                  <p className='text-xs opacity-75'>{item.theater} • Screen {item.screen}</p>
-                </div>
+        <div className='mt-4 space-y-1'>
+          {show.dateTime[date]?.map((item) => (
+            <div
+              key={item.time}
+              onClick={() => setSelectedTime(item)}
+              className={`flex items-center gap-3 px-4 sm:px-6 py-3 w-full cursor-pointer
+              transition-all duration-200 ${
+                selectedTime?.time === item.time
+                  ? "bg-primary text-white shadow-lg"
+                  : "hover:bg-primary/20"
+              }`}
+            >
+              <ClockIcon className='w-4 h-4 shrink-0' />
+              <div>
+                <p className='text-sm font-medium'>{item.displayTime || item.time}</p>
+                <p className='text-xs opacity-75'>{item.theater} • Screen {item.screen}</p>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
 
