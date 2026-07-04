@@ -146,7 +146,8 @@ function MovieDetails() {
   if (!movie) return <Loading />;
 
   return (
-    <div className="px-4 sm:px-6 md:px-16 lg:px-40 pt-20 sm:pt-30 md:pt-40 lg:pt-50 pb-12">
+    // Changed padding to match Movies.jsx navbar positioning
+    <div className="relative my-24 sm:my-40 mb-40 sm:mb-60 px-4 sm:px-6 md:px-16 lg:px-40 xl:px-44 overflow-hidden min-h-[80vh]">
 
       {/* Trailer Modal — fixed in middle of screen with responsive design */}
       {showTrailer && (
