@@ -148,27 +148,27 @@ function MovieDetails() {
   return (
     <div className="px-4 sm:px-6 md:px-16 lg:px-40 pt-20 sm:pt-30 md:pt-40 lg:pt-50 pb-12">
 
-      {/* Trailer Modal - Fixed in middle with proper sizing like trailer section */}
+      {/* Trailer Card - Like 2nd image (homepage trailer section) */}
       {showTrailer && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           onClick={handleCloseTrailer}
         >
           <div 
-            className="relative w-full max-w-[480px] bg-black rounded-lg overflow-hidden shadow-2xl"
+            className="relative w-full max-w-[380px] sm:max-w-[460px] bg-black rounded-2xl overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button */}
+            {/* Close button - positioned like in homepage trailer */}
             <button
               onClick={handleCloseTrailer}
-              className="absolute top-2 right-2 z-20 p-2 bg-black/70 hover:bg-black/90 rounded-full text-white hover:text-primary transition-colors duration-200"
+              className="absolute top-3 right-3 z-20 p-1.5 bg-black/60 hover:bg-black/80 rounded-full text-white hover:text-primary transition-colors duration-200"
               aria-label="Close trailer"
             >
               <XIcon className="w-5 h-5" />
             </button>
             
-            {/* Video container with 16:9 aspect ratio */}
-            <div className="relative w-full pt-[56.25%]">
+            {/* Video with rounded corners like trailer card */}
+            <div className="relative w-full aspect-video">
               <iframe
                 src={`${trailerUrl}?autoplay=1&rel=0&controls=1&showinfo=0&modestbranding=1`}
                 title="Movie Trailer"
@@ -177,6 +177,16 @@ function MovieDetails() {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               ></iframe>
+            </div>
+            
+            {/* Trailer title overlay like in homepage */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+              <p className="text-white font-semibold text-sm sm:text-base">
+                {movie.show.title} Trailer
+              </p>
+              <p className="text-gray-400 text-xs sm:text-sm">
+                Watch on YouTube
+              </p>
             </div>
           </div>
         </div>
