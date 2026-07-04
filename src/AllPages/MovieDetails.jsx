@@ -148,17 +148,17 @@ function MovieDetails() {
   return (
     <div className="px-4 sm:px-6 md:px-16 lg:px-40 pt-20 sm:pt-30 md:pt-40 lg:pt-50 pb-12">
 
-      {/* Trailer Modal - Fixed in middle of screen like homepage */}
+      {/* Trailer Modal - Fixed in middle with mobile-sized video card */}
       {showTrailer && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
           onClick={handleCloseTrailer}
         >
           <div 
-            className="relative w-[95%] max-w-4xl bg-black rounded-lg overflow-hidden shadow-2xl"
+            className="relative w-full max-w-[460px] bg-black rounded-lg overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button - positioned absolutely on top right */}
+            {/* Close button */}
             <button
               onClick={handleCloseTrailer}
               className="absolute top-2 right-2 z-20 p-1.5 bg-black/70 hover:bg-black/90 rounded-full text-white hover:text-primary transition-colors duration-200"
