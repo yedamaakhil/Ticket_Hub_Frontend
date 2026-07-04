@@ -148,27 +148,27 @@ function MovieDetails() {
   return (
     <div className="px-4 sm:px-6 md:px-16 lg:px-40 pt-20 sm:pt-30 md:pt-40 lg:pt-50 pb-12">
 
-      {/* Trailer Modal - Fixed in middle with mobile-sized video card */}
+      {/* Trailer Modal - Fixed in middle with proper sizing like trailer section */}
       {showTrailer && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
           onClick={handleCloseTrailer}
         >
           <div 
-            className="relative w-full max-w-[460px] bg-black rounded-lg overflow-hidden shadow-2xl"
+            className="relative w-full max-w-[480px] bg-black rounded-lg overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
             <button
               onClick={handleCloseTrailer}
-              className="absolute top-2 right-2 z-20 p-1.5 bg-black/70 hover:bg-black/90 rounded-full text-white hover:text-primary transition-colors duration-200"
+              className="absolute top-2 right-2 z-20 p-2 bg-black/70 hover:bg-black/90 rounded-full text-white hover:text-primary transition-colors duration-200"
               aria-label="Close trailer"
             >
               <XIcon className="w-5 h-5" />
             </button>
             
             {/* Video container with 16:9 aspect ratio */}
-            <div className="relative w-full aspect-video">
+            <div className="relative w-full pt-[56.25%]">
               <iframe
                 src={`${trailerUrl}?autoplay=1&rel=0&controls=1&showinfo=0&modestbranding=1`}
                 title="Movie Trailer"
