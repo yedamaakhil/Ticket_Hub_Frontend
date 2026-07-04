@@ -49,7 +49,6 @@ const LANGUAGES = [
     "Malayalam", "Kannada", "Bengali", "Marathi",
 ];
 
-// Theaters come from the shared config (theaterdata.js)
 const THEATERS = THEATER_NAMES;
 
 // ─────────────────────────────────────────────
@@ -61,16 +60,16 @@ const timeFormat = (mins) => {
 };
 
 // ─────────────────────────────────────────────
-//  CAST ROW
+//  CAST ROW - Responsive
 // ─────────────────────────────────────────────
 function CastRow({ index, cast, onUpdate, onRemove }) {
     return (
-        <div className="flex gap-2 flex-wrap items-start mb-2">
+        <div className="flex flex-col sm:flex-row gap-2 flex-wrap items-start mb-3 sm:mb-2">
             <input
                 placeholder="Actor Name *"
                 value={cast.name}
                 onChange={(e) => onUpdate(index, "name", e.target.value)}
-                className="flex-1 min-w-36 px-3 py-2 bg-primary/10 border border-primary/20
+                className="w-full sm:flex-1 min-w-36 px-3 py-2.5 sm:py-2 bg-primary/10 border border-primary/20
                            rounded-lg text-sm text-white placeholder-gray-500 outline-none
                            focus:border-primary/60 transition"
             />
@@ -78,7 +77,7 @@ function CastRow({ index, cast, onUpdate, onRemove }) {
                 placeholder="Character"
                 value={cast.character}
                 onChange={(e) => onUpdate(index, "character", e.target.value)}
-                className="flex-1 min-w-36 px-3 py-2 bg-primary/10 border border-primary/20
+                className="w-full sm:flex-1 min-w-36 px-3 py-2.5 sm:py-2 bg-primary/10 border border-primary/20
                            rounded-lg text-sm text-white placeholder-gray-500 outline-none
                            focus:border-primary/60 transition"
             />
@@ -86,53 +85,49 @@ function CastRow({ index, cast, onUpdate, onRemove }) {
                 placeholder="Profile Image URL"
                 value={cast.profile_path}
                 onChange={(e) => onUpdate(index, "profile_path", e.target.value)}
-                className="flex-[2] min-w-48 px-3 py-2 bg-primary/10 border border-primary/20
+                className="w-full sm:flex-[2] min-w-48 px-3 py-2.5 sm:py-2 bg-primary/10 border border-primary/20
                            rounded-lg text-sm text-white placeholder-gray-500 outline-none
                            focus:border-primary/60 transition"
             />
             <button
                 type="button"
                 onClick={() => onRemove(index)}
-                className="p-2 text-red-400 hover:text-red-300 transition cursor-pointer"
+                className="p-2 text-red-400 hover:text-red-300 transition cursor-pointer self-end sm:self-auto"
             >
-                <XIcon className="w-4 h-4" />
+                <XIcon className="w-5 h-5 sm:w-4 sm:h-4" />
             </button>
         </div>
     );
 }
 
 // ─────────────────────────────────────────────
-//  STORED MOVIE CHIP (for the "Movies Added" section)
+//  STORED MOVIE CHIP - Responsive
 // ─────────────────────────────────────────────
 function StoredMovieRow({ movie, onRemove, onEdit }) {
     return (
-        <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/15
+        <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-primary/5 border border-primary/15
                         rounded-xl hover:border-primary/30 transition">
             <img
                 src={movie.poster_path}
                 alt={movie.title}
-                className="w-10 h-14 object-cover rounded-lg flex-shrink-0"
+                className="w-8 h-12 sm:w-10 sm:h-14 object-cover rounded-lg flex-shrink-0"
                 onError={(e) => { e.currentTarget.style.opacity = "0.2"; }}
             />
             <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-semibold truncate">{movie.title}</p>
-                <p className="text-gray-500 text-xs mt-0.5">
+                <p className="text-white text-xs sm:text-sm font-semibold truncate">{movie.title}</p>
+                <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 truncate">
                     ID: {movie.id} · {movie.release_date?.split("-")[0]}
                     {movie.original_language ? ` · ${movie.original_language}` : ""}
-                    {movie.vote_average ? ` · ⭐ ${movie.vote_average}` : ""}
                 </p>
-                <p className="text-gray-600 text-xs mt-0.5">
+                <p className="text-gray-600 text-[10px] sm:text-xs mt-0.5 truncate">
                     🏛 {movie.theater} · Screen {movie.screen}
                 </p>
-                <p className="text-green-500 text-xs mt-0.5">
-                    ✅ Visible to users
-                </p>
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-1 flex-shrink-0">
                 <button
                     onClick={() => onEdit(movie)}
                     className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10
-                               rounded-lg transition cursor-pointer flex-shrink-0"
+                               rounded-lg transition cursor-pointer"
                     title="Edit movie"
                 >
                     <EditIcon className="w-4 h-4" />
@@ -140,7 +135,7 @@ function StoredMovieRow({ movie, onRemove, onEdit }) {
                 <button
                     onClick={() => onRemove(movie.id)}
                     className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10
-                               rounded-lg transition cursor-pointer flex-shrink-0"
+                               rounded-lg transition cursor-pointer"
                     title="Remove movie"
                 >
                     <Trash2Icon className="w-4 h-4" />
@@ -151,32 +146,29 @@ function StoredMovieRow({ movie, onRemove, onEdit }) {
 }
 
 // ─────────────────────────────────────────────
-//  SECTION CARD WRAPPER
+//  SECTION CARD WRAPPER - Responsive
 // ─────────────────────────────────────────────
 function Section({ icon: Icon, title, children }) {
     return (
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
-            <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                <Icon className="w-5 h-5 text-primary" />
-                {title}
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 sm:p-6">
+            <h3 className="text-sm sm:text-base font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+                <span>{title}</span>
             </h3>
             {children}
         </div>
     );
 }
 
-const inputCls = "w-full px-3 py-2.5 bg-primary/10 border border-primary/20 rounded-lg text-sm text-white placeholder-gray-500 outline-none focus:border-primary/60 transition";
+const inputCls = "w-full px-3 py-2.5 sm:py-2.5 bg-primary/10 border border-primary/20 rounded-lg text-sm text-white placeholder-gray-500 outline-none focus:border-primary/60 transition";
 
 // ─────────────────────────────────────────────
 //  OCCUPANCY HELPERS
-//  A screen is "occupied" if some movie already sits on that theater+screen.
-//  When editing, the movie being edited does NOT count as occupying its slot.
 // ─────────────────────────────────────────────
 const buildOccupancy = (allMovies, editingMovieId) => {
-    // Map: theaterName -> Set of occupied screen ids (as strings)
     const map = {};
     allMovies.forEach((m) => {
-        if (editingMovieId != null && String(m.id) === String(editingMovieId)) return; // skip self
+        if (editingMovieId != null && String(m.id) === String(editingMovieId)) return;
         if (!m.theater || m.screen == null) return;
         const key = m.theater;
         if (!map[key]) map[key] = new Set();
@@ -185,26 +177,24 @@ const buildOccupancy = (allMovies, editingMovieId) => {
     return map;
 };
 
-// Free screen ids for a theater = screens it has, minus occupied ones
 const getFreeScreenIds = (theaterName, occupancy) => {
     const all = getScreenIdsForTheater(theaterName);
     const taken = occupancy[theaterName] || new Set();
     return all.filter((id) => !taken.has(String(id)));
 };
 
-// First theater that still has a free screen
 const firstTheaterWithFreeScreen = (occupancy) => {
     for (const name of THEATERS) {
         if (getFreeScreenIds(name, occupancy).length > 0) return name;
     }
-    return THEATERS[0]; // fallback: everything full, just show the first
+    return THEATERS[0];
 };
 
 // ─────────────────────────────────────────────
 //  MAIN COMPONENT
 // ─────────────────────────────────────────────
 function AddMovie() {
-    const [form,           setForm]           = useState(null); // set after computing free slot
+    const [form,           setForm]           = useState(null);
     const [selectedGenres, setSelectedGenres] = useState([]);
     const [casts,          setCasts]          = useState([{ name: "", character: "", profile_path: "" }]);
     const [submitting,     setSubmitting]     = useState(false);
@@ -216,19 +206,16 @@ function AddMovie() {
     const [isEditMode,     setIsEditMode]     = useState(false);
     const [editingMovieId, setEditingMovieId] = useState(null);
 
-    // Occupancy of theater+screen slots (excludes the movie being edited)
     const occupancy = useMemo(
         () => buildOccupancy(allMovies, editingMovieId),
         [allMovies, editingMovieId]
     );
 
-    // Refresh movie data from store
     const refreshMovies = () => {
         setStoredMovies(getStoredMovies());
         setAllMovies(getAllMovies());
     };
 
-    // Build a fresh empty form pointed at the first available free slot
     const buildEmptyForm = () => {
         const occ = buildOccupancy(getAllMovies(), null);
         const theater = firstTheaterWithFreeScreen(occ);
@@ -250,30 +237,25 @@ function AddMovie() {
         };
     };
 
-    // Load movies + initialise the form on mount
     useEffect(() => {
         refreshMovies();
         setForm(buildEmptyForm());
     }, []);
 
-    // Screens available (free) for the currently selected theater
     const freeScreenIds = form ? getFreeScreenIds(form.theater, occupancy) : [];
-    // When editing, the movie's own current screen is also allowed
     const allowedScreenIds = (() => {
         if (!form) return [];
         const set = new Set(freeScreenIds.map(String));
-        if (isEditMode && form.screen) set.add(String(form.screen)); // keep own slot selectable
+        if (isEditMode && form.screen) set.add(String(form.screen));
         return set;
     })();
 
-    // ── Form field handler ──
     const set = (key) => (e) => {
         const val = e.target.value;
         setForm((f) => ({ ...f, [key]: val }));
         if (key === "poster_path") setPreviewImg(val || null);
     };
 
-    // ── Theater change handler: snap screen to a free one for the new theater ──
     const handleTheaterChange = (e) => {
         const newTheater = e.target.value;
         const free = getFreeScreenIds(newTheater, occupancy);
@@ -284,13 +266,11 @@ function AddMovie() {
         }));
     };
 
-    // ── Genre toggle ──
     const toggleGenre = (g) =>
         setSelectedGenres((prev) =>
             prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]
         );
 
-    // ── Cast handlers ──
     const updateCast   = (i, field, val) =>
         setCasts((prev) => prev.map((c, idx) => idx === i ? { ...c, [field]: val } : c));
     const addCast      = () => setCasts((prev) => [...prev, { name: "", character: "", profile_path: "" }]);
@@ -299,7 +279,6 @@ function AddMovie() {
         setCasts((prev) => prev.filter((_, idx) => idx !== i));
     };
 
-    // ── Validate ──
     const validate = () => {
         if (!form.title.trim())         { toast.error("Movie title is required");       return false; }
         if (!form.overview.trim())      { toast.error("Overview is required");          return false; }
@@ -316,7 +295,6 @@ function AddMovie() {
         return true;
     };
 
-    // ── Reset form ──
     const resetForm = () => {
         setForm(buildEmptyForm());
         setSelectedGenres([]);
@@ -326,7 +304,6 @@ function AddMovie() {
         setEditingMovieId(null);
     };
 
-    // ── Load movie data into form for editing ──
     const loadMovieForEdit = (movie) => {
         const theaterForEdit = movie.theater || THEATERS[0];
         setForm({
@@ -368,7 +345,6 @@ function AddMovie() {
         toast.success(`Editing "${movie.title}"`, { duration: 3000 });
     };
 
-    // ── Submit: Add new movie or Update existing ──
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!validate()) return;
@@ -432,7 +408,6 @@ function AddMovie() {
         }, 2000);
     };
 
-    // ── Remove a stored movie ──
     const handleRemove = (id) => {
         if (!window.confirm("Are you sure you want to remove this movie? This action cannot be undone.")) {
             return;
@@ -449,54 +424,49 @@ function AddMovie() {
         }
     };
 
-    // ── Cancel edit mode ──
     const handleCancelEdit = () => {
         resetForm();
         toast("Edit mode cancelled", { icon: "📝" });
     };
 
-    // Don't render until the form has been initialised
     if (!form) return null;
 
-    // ─────────────────────────────────────────
-    //  RENDER
-    // ─────────────────────────────────────────
     return (
         <>
             <Title text1={isEditMode ? "Update" : "Add"} text2="Movie" />
 
             {/* ── Header stats ── */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mt-6 mb-6 max-w-4xl">
-                <div className="flex gap-3">
-                    <div className="bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-lg text-center">
-                        <p className="text-primary font-bold text-xl">{getTotalMovieCount()}</p>
-                        <p className="text-gray-500 text-xs">Total Movies</p>
+            <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mt-4 sm:mt-6 mb-4 sm:mb-6 max-w-4xl">
+                <div className="flex gap-2 sm:gap-3 flex-wrap">
+                    <div className="bg-primary/10 border border-primary/20 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-center">
+                        <p className="text-primary font-bold text-lg sm:text-xl">{getTotalMovieCount()}</p>
+                        <p className="text-gray-500 text-[10px] sm:text-xs">Total Movies</p>
                     </div>
-                    <div className="bg-green-500/10 border border-green-500/20 px-4 py-2.5 rounded-lg text-center">
-                        <p className="text-green-400 font-bold text-xl">{getStoredMovieCount()}</p>
-                        <p className="text-gray-500 text-xs">Admin Added</p>
+                    <div className="bg-green-500/10 border border-green-500/20 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-center">
+                        <p className="text-green-400 font-bold text-lg sm:text-xl">{getStoredMovieCount()}</p>
+                        <p className="text-gray-500 text-[10px] sm:text-xs">Admin Added</p>
                     </div>
                 </div>
 
                 {storedMovies.length > 0 && (
                     <button
                         onClick={() => setShowAdded((p) => !p)}
-                        className="flex items-center gap-2 text-xs text-gray-400 hover:text-primary
-                                   border border-primary/20 hover:border-primary/50 px-3 py-2
+                        className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-gray-400 hover:text-primary
+                                   border border-primary/20 hover:border-primary/50 px-2.5 sm:px-3 py-1.5 sm:py-2
                                    rounded-full transition cursor-pointer"
                     >
-                        <RefreshCwIcon className="w-3.5 h-3.5" />
-                        {showAdded ? "Hide" : "Show"} Added Movies ({storedMovies.length})
+                        <RefreshCwIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                        {showAdded ? "Hide" : "Show"} Added ({storedMovies.length})
                     </button>
                 )}
             </div>
 
             {/* ── Info banner ── */}
-            <div className="max-w-4xl mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                <p className="text-blue-400 text-sm font-semibold mb-1">
+            <div className="max-w-4xl mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                <p className="text-blue-400 text-xs sm:text-sm font-semibold mb-1">
                     {isEditMode ? "✏️ Editing Mode" : "💾 Add New Movie"}
                 </p>
-                <p className="text-gray-400 text-xs leading-relaxed">
+                <p className="text-gray-400 text-[10px] sm:text-xs leading-relaxed">
                     {isEditMode 
                         ? "You are currently editing an existing movie. Make your changes and click 'Update Movie' to save."
                         : "Each screen holds one movie. Theaters and screens that are already taken are disabled below — only free slots can be picked."
@@ -506,11 +476,11 @@ function AddMovie() {
 
             {/* ── Admin-added movies list ── */}
             {showAdded && storedMovies.length > 0 && (
-                <div className="max-w-4xl mb-8">
-                    <p className="text-sm font-medium text-gray-300 mb-3">
+                <div className="max-w-4xl mb-6 sm:mb-8">
+                    <p className="text-xs sm:text-sm font-medium text-gray-300 mb-2 sm:mb-3">
                         Admin-Added Movies (Click Edit to modify)
                     </p>
-                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto pr-1">
                         {storedMovies.map((m) => (
                             <StoredMovieRow 
                                 key={m.id} 
@@ -524,15 +494,15 @@ function AddMovie() {
             )}
 
             {/* ── Form ── */}
-            <form onSubmit={handleSubmit} className="max-w-4xl space-y-6">
+            <form onSubmit={handleSubmit} className="max-w-4xl space-y-4 sm:space-y-6">
                 <BlurCircle top="-60px" left="0" />
 
                 {/* Basic Info with ID Field */}
                 <Section icon={InfoIcon} title="Basic Information">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                         {isEditMode && (
                             <div className="md:col-span-2">
-                                <label className="text-xs text-gray-400 mb-1.5 block">Movie ID (Auto-generated, Read-only)</label>
+                                <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block">Movie ID (Auto-generated, Read-only)</label>
                                 <input
                                     value={form.id}
                                     disabled
@@ -541,7 +511,7 @@ function AddMovie() {
                             </div>
                         )}
                         <div className="md:col-span-2">
-                            <label className="text-xs text-gray-400 mb-1.5 block">Movie Title *</label>
+                            <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block">Movie Title *</label>
                             <input
                                 value={form.title}
                                 onChange={set("title")}
@@ -550,7 +520,7 @@ function AddMovie() {
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="text-xs text-gray-400 mb-1.5 block">Tagline</label>
+                            <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block">Tagline</label>
                             <input
                                 value={form.tagline}
                                 onChange={set("tagline")}
@@ -559,7 +529,7 @@ function AddMovie() {
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="text-xs text-gray-400 mb-1.5 block">Overview / Description *</label>
+                            <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block">Overview / Description *</label>
                             <textarea
                                 value={form.overview}
                                 onChange={set("overview")}
@@ -573,9 +543,9 @@ function AddMovie() {
 
                 {/* Images & Media */}
                 <Section icon={ImageIcon} title="Images & Media">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                         <div>
-                            <label className="text-xs text-gray-400 mb-1.5 block">Poster Image URL *</label>
+                            <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block">Poster Image URL *</label>
                             <input
                                 value={form.poster_path}
                                 onChange={set("poster_path")}
@@ -584,7 +554,7 @@ function AddMovie() {
                             />
                         </div>
                         <div>
-                            <label className="text-xs text-gray-400 mb-1.5 block">Backdrop Image URL *</label>
+                            <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block">Backdrop Image URL *</label>
                             <input
                                 value={form.backdrop_path}
                                 onChange={set("backdrop_path")}
@@ -593,7 +563,7 @@ function AddMovie() {
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="text-xs text-gray-400 mb-1.5 block flex items-center gap-1">
+                            <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block flex items-center gap-1">
                                 <VideoIcon className="w-3 h-3" /> Trailer URL (YouTube embed)
                             </label>
                             <input
@@ -606,13 +576,13 @@ function AddMovie() {
                     </div>
 
                     {previewImg && (
-                        <div className="mt-4 flex items-start gap-4">
+                        <div className="mt-3 sm:mt-4 flex items-start gap-3 sm:gap-4">
                             <div>
-                                <p className="text-xs text-gray-500 mb-2">Poster Preview</p>
+                                <p className="text-[10px] sm:text-xs text-gray-500 mb-1.5 sm:mb-2">Poster Preview</p>
                                 <img
                                     src={previewImg}
                                     alt="Preview"
-                                    className="w-28 h-40 object-cover rounded-xl border border-primary/20"
+                                    className="w-20 h-28 sm:w-28 sm:h-40 object-cover rounded-xl border border-primary/20"
                                     onError={(e) => {
                                         e.currentTarget.style.display = "none";
                                         toast.error("Invalid image URL");
@@ -625,13 +595,13 @@ function AddMovie() {
 
                 {/* Movie Details */}
                 <Section icon={CalendarIcon} title="Movie Details">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                         <div>
-                            <label className="text-xs text-gray-400 mb-1.5 block">Release Date *</label>
+                            <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block">Release Date *</label>
                             <input type="date" value={form.release_date} onChange={set("release_date")} className={inputCls} />
                         </div>
                         <div>
-                            <label className="text-xs text-gray-400 mb-1.5 block">Runtime (minutes) *</label>
+                            <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block">Runtime (minutes) *</label>
                             <input
                                 type="number" min="1" max="400"
                                 value={form.runtime}
@@ -640,11 +610,11 @@ function AddMovie() {
                                 className={inputCls}
                             />
                             {form.runtime && (
-                                <p className="text-gray-600 text-xs mt-1">{timeFormat(parseInt(form.runtime))}</p>
+                                <p className="text-gray-600 text-[10px] sm:text-xs mt-1">{timeFormat(parseInt(form.runtime))}</p>
                             )}
                         </div>
                         <div>
-                            <label className="text-xs text-gray-400 mb-1.5 block">Original Language *</label>
+                            <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block">Original Language *</label>
                             <div className="relative">
                                 <LanguagesIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                                 <select value={form.original_language} onChange={set("original_language")} className={`${inputCls} pl-9 cursor-pointer`}>
@@ -653,7 +623,7 @@ function AddMovie() {
                             </div>
                         </div>
                         <div>
-                            <label className="text-xs text-gray-400 mb-1.5 block">Rating (0–10)</label>
+                            <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block">Rating (0–10)</label>
                             <div className="relative">
                                 <StarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-yellow-500" />
                                 <input
@@ -666,12 +636,10 @@ function AddMovie() {
                             </div>
                         </div>
                         <div>
-                            <label className="text-xs text-gray-400 mb-1.5 block">Theater</label>
+                            <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block">Theater</label>
                             <select value={form.theater} onChange={handleTheaterChange} className={`${inputCls} cursor-pointer`}>
                                 {THEATERS.map((t) => {
                                     const freeCount = getFreeScreenIds(t, occupancy).length;
-                                    // theater is fully booked if it has no free screens (and, when editing,
-                                    // it's not the theater of the movie being edited)
                                     const isCurrentEditTheater = isEditMode && t === form.theater;
                                     const full = freeCount === 0 && !isCurrentEditTheater;
                                     return (
@@ -683,10 +651,10 @@ function AddMovie() {
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs text-gray-400 mb-1.5 block">
+                            <label className="text-[10px] sm:text-xs text-gray-400 mb-1 block">
                                 Screen
-                                <span className="text-gray-600 ml-1">
-                                    ({freeScreenIds.length} free at {form.theater})
+                                <span className="text-gray-600 text-[10px] sm:text-xs ml-1">
+                                    ({freeScreenIds.length} free)
                                 </span>
                             </label>
                             <select value={form.screen} onChange={set("screen")} className={`${inputCls} cursor-pointer`}>
@@ -694,7 +662,6 @@ function AddMovie() {
                                     <option value="" className="bg-gray-900">No free screen</option>
                                 )}
                                 {getScreenIdsForTheater(form.theater).map((id) => {
-                                    const hasScreen = true; // already filtered to this theater's screens
                                     const isFree = freeScreenIds.includes(id);
                                     const isOwnSlot = isEditMode && String(id) === String(form.screen);
                                     const selectable = isFree || isOwnSlot;
@@ -720,13 +687,13 @@ function AddMovie() {
 
                 {/* Genres */}
                 <Section icon={TagIcon} title="Genres *">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {GENRES.map((g) => (
                             <button
                                 key={g}
                                 type="button"
                                 onClick={() => toggleGenre(g)}
-                                className={`px-3 py-1.5 rounded-full text-sm transition cursor-pointer
+                                className={`px-2.5 sm:px-3 py-1.5 sm:py-1.5 rounded-full text-[10px] sm:text-sm transition cursor-pointer
                                     ${selectedGenres.includes(g)
                                         ? "bg-primary text-white shadow-lg shadow-primary/20"
                                         : "bg-primary/10 text-gray-300 hover:bg-primary/20"}`}
@@ -736,7 +703,7 @@ function AddMovie() {
                         ))}
                     </div>
                     {selectedGenres.length > 0 && (
-                        <p className="text-gray-500 text-xs mt-3">
+                        <p className="text-gray-500 text-[10px] sm:text-xs mt-2 sm:mt-3">
                             Selected: {selectedGenres.join(", ")}
                         </p>
                     )}
@@ -744,7 +711,7 @@ function AddMovie() {
 
                 {/* Cast */}
                 <Section icon={UsersIcon} title="Cast & Crew *">
-                    <div className="space-y-2">
+                    <div className="space-y-2 sm:space-y-2">
                         {casts.map((cast, i) => (
                             <CastRow
                                 key={i}
@@ -757,23 +724,23 @@ function AddMovie() {
                         <button
                             type="button"
                             onClick={addCast}
-                            className="text-primary hover:text-primary/80 text-sm flex items-center
-                                       gap-1 transition cursor-pointer mt-2"
+                            className="text-primary hover:text-primary/80 text-xs sm:text-sm flex items-center
+                                       gap-1 transition cursor-pointer mt-1 sm:mt-2"
                         >
                             <PlusCircleIcon className="w-4 h-4" /> Add Cast Member
                         </button>
                     </div>
                 </Section>
 
-                {/* Submit Buttons */}
-                <div className="flex justify-end gap-3 pb-6">
+                {/* Submit Buttons - Responsive */}
+                <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pb-4 sm:pb-6">
                     {isEditMode && (
                         <button
                             type="button"
                             onClick={handleCancelEdit}
-                            className="flex items-center gap-2 px-10 py-3 rounded-full text-sm
+                            className="flex items-center justify-center gap-2 px-6 sm:px-10 py-2.5 sm:py-3 rounded-full text-sm
                                        font-semibold transition cursor-pointer active:scale-95
-                                       bg-gray-700 hover:bg-gray-600 text-white"
+                                       bg-gray-700 hover:bg-gray-600 text-white w-full sm:w-auto"
                         >
                             <XIcon className="w-4 h-4" />
                             Cancel Edit
@@ -782,9 +749,9 @@ function AddMovie() {
                     <button
                         type="submit"
                         disabled={submitting || success}
-                        className={`flex items-center gap-2 px-10 py-3 rounded-full text-sm
+                        className={`flex items-center justify-center gap-2 px-6 sm:px-10 py-2.5 sm:py-3 rounded-full text-sm
                                     font-semibold transition cursor-pointer active:scale-95
-                                    disabled:opacity-60 disabled:cursor-not-allowed
+                                    disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto
                                     ${success
                                         ? "bg-green-500/20 border border-green-500/40 text-green-400"
                                         : "bg-primary hover:bg-primary-dull text-white shadow-lg shadow-primary/20"}`}
