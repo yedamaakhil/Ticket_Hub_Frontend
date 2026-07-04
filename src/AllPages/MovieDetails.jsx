@@ -21,6 +21,7 @@ function MovieDetails() {
   const [trailerUrl, setTrailerUrl] = useState("");
   const [isFav, setIsFav] = useState(false);
   const [favouriteCount, setFavouriteCount] = useState(0);
+  const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
 
   const checkFavouriteStatus = () => {
     if (movie?.show) {
@@ -103,16 +104,22 @@ function MovieDetails() {
 
   const handleWatchTrailer = () => {
     if (movie && movie.show) {
+      setIsLoadingTrailer(true);
       const trailer = getTrailerForMovie(movie.show.title, movie.show.trailerUrl);
       setTrailerUrl(trailer.videoUrl);
       setShowTrailer(true);
       document.body.style.overflow = 'hidden';
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        setIsLoadingTrailer(false);
+      }, 100);
     }
   };
 
   const handleCloseTrailer = () => {
     setShowTrailer(false);
     setTrailerUrl("");
+    setIsLoadingTrailer(false);
     document.body.style.overflow = 'auto';
   };
 
@@ -148,33 +155,46 @@ function MovieDetails() {
   return (
     <div className="px-4 sm:px-6 md:px-16 lg:px-40 pt-20 sm:pt-30 md:pt-40 lg:pt-50 pb-12">
 
-      {/* Trailer Modal — responsive: close button repositioned so it never
-          goes off-screen on mobile, modal width/padding scales properly */}
+      {/* Trailer Modal - Optimized for mobile */}
       {showTrailer && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm px-3 sm:px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm px-2 sm:px-4"
           onClick={handleCloseTrailer}
         >
           <div
-            className="relative w-full max-w-4xl mx-auto rounded-xl sm:rounded-2xl overflow-hidden"
+            className="relative w-full max-w-4xl mx-auto bg-black rounded-lg sm:rounded-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Close button - always accessible */}
             <button
               onClick={handleCloseTrailer}
-              className="absolute top-2 right-2 sm:-top-12 sm:right-0 p-2 bg-black/60 sm:bg-transparent
-              rounded-full sm:rounded-none text-white hover:text-primary transition-colors z-10"
+              className="absolute top-2 right-2 z-20 p-1.5 sm:p-2 bg-black/70 hover:bg-black/90 
+              rounded-full text-white hover:text-primary transition-colors"
+              aria-label="Close trailer"
             >
               <XIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <div className="relative pt-[56.25%]">
-              <iframe
-                src={`${trailerUrl}?autoplay=1&rel=0`}
-                title="Movie Trailer"
-                className="absolute top-0 left-0 w-full h-full rounded-lg"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
+            
+            {/* Loading state */}
+            {isLoadingTrailer && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+
+            <div className="relative pt-[56.25%] bg-black">
+              {trailerUrl && (
+                <iframe
+                  src={`${trailerUrl}?autoplay=1&rel=0&modestbranding=1`}
+                  title="Movie Trailer"
+                  className="absolute top-0 left-0 w-full h-full"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                  onLoad={() => setIsLoadingTrailer(false)}
+                ></iframe>
+              )}
             </div>
           </div>
         </div>
