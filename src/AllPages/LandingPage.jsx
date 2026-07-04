@@ -27,23 +27,25 @@ function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
 
+      {/* Nav — logo gets min-w-0 so it can shrink if needed, buttons always
+          get shrink-0 so they can never be squeezed to invisible/zero-width */}
       <nav className="flex items-center justify-between gap-2 px-3 sm:px-8 md:px-20 py-3 sm:py-5
       border-b border-white/10 bg-black/50 backdrop-blur fixed top-0 w-full z-50">
-        <div className="flex items-center gap-2 shrink-0 min-w-0">
-          <img src={assets.a} alt="TicketHub" className="h-7 sm:h-9 w-auto" />
+        <div className="flex items-center gap-2 min-w-0 shrink">
+          <img src={assets.a} alt="TicketHub" className="h-7 sm:h-9 w-auto max-w-full" />
         </div>
-        <div className="flex gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={handleSignIn}
-            className="px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm border border-white/30 rounded-full
-            hover:bg-white/10 transition cursor-pointer whitespace-nowrap text-white shrink-0"
+            className="shrink-0 px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm border border-white/40 rounded-full
+            hover:bg-white/10 transition cursor-pointer whitespace-nowrap text-white bg-transparent"
           >
             Login
           </button>
           <button
             onClick={handleSignIn}
-            className="px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm bg-primary hover:bg-primary-dull
-            rounded-full transition cursor-pointer font-medium whitespace-nowrap text-white shrink-0"
+            className="shrink-0 px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm bg-primary hover:bg-primary-dull
+            rounded-full transition cursor-pointer font-medium whitespace-nowrap text-white"
           >
             Sign Up
           </button>

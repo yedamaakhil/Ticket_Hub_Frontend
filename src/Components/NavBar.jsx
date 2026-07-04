@@ -105,23 +105,25 @@ function NavBar() {
 
   return (
     <>
-      <div className='fixed top-3 sm:top-5 left-0 z-50 w-full flex items-center
-        justify-between px-3 sm:px-6 md:px-16 lg:px-36 py-3 sm:py-5'>
+      <div className='fixed top-0 left-0 z-50 w-full flex items-center
+        justify-between gap-2 px-3 sm:px-6 md:px-16 lg:px-36 py-3 sm:py-4
+        bg-black/50 backdrop-blur border-b border-white/5'>
 
-        <Link to='/' className='max-md:flex-1 shrink-0'>
-          <img src={assets.a} alt="Logo" className='w-36 sm:w-48 md:w-60 lg:w-72 h-auto' />
+        {/* Logo — same height-based sizing as LandingPage so it's visually identical everywhere */}
+        <Link to='/' className='min-w-0 shrink flex items-center'>
+          <img src={assets.a} alt="Logo" className='h-7 sm:h-9 w-auto max-w-full' />
         </Link>
 
         <div className={`max-md:absolute max-md:top-0 max-md:left-0 max-md:font-medium
           max-md:text-lg z-50 flex flex-col md:flex-row items-center
           max-md:justify-center gap-6 sm:gap-8 min-md:px-8 py-3 max-md:h-screen
-          min-md:rounded-full backdrop-blur bg-black/70 md:bg-white/10 md:border
+          min-md:rounded-full backdrop-blur bg-black/90 md:bg-white/10 md:border
           border-gray-300/20 overflow-hidden transition-[width] duration-300
           ${isMenuOpen ? 'max-md:w-full' : 'max-md:w-0'}
           md:absolute md:left-1/2 md:transform md:-translate-x-1/2`}>
 
           <XIcon className='md:hidden absolute top-6 right-6 w-6 h-6
-            cursor-pointer' onClick={() => setIsMenuOpen(!isMenuOpen)} />
+            cursor-pointer text-white' onClick={() => setIsMenuOpen(!isMenuOpen)} />
 
           <Link onClick={() => { window.scrollTo(0, 0); setIsMenuOpen(false) }} to='/home'>Home</Link>
           <Link onClick={() => { window.scrollTo(0, 0); setIsMenuOpen(false) }} to='/movies'>Movies</Link>
@@ -131,7 +133,9 @@ function NavBar() {
           <Link onClick={() => { window.scrollTo(0, 0); setIsMenuOpen(false) }} to='/contact'>Contact Us</Link>
         </div>
 
-        <div className='flex items-center gap-2 sm:gap-3 md:gap-8 relative shrink-0' ref={searchRef}>
+        {/* Right cluster — shrink-0 on the whole group so it never collapses,
+            search + login/user always stay visible and tappable */}
+        <div className='flex items-center gap-2 sm:gap-3 md:gap-6 relative shrink-0' ref={searchRef}>
           <SearchIcon
             className='w-5 h-5 sm:w-6 sm:h-6 cursor-pointer hover:scale-110 transition-transform shrink-0'
             onClick={handleSearchClick}
@@ -271,22 +275,24 @@ function NavBar() {
           )}
 
           {!user ? (
-            <button onClick={openSignIn} className='px-3 py-1.5 sm:px-7 sm:py-2 bg-primary
-              hover:bg-primary-dull transition rounded-full font-medium text-sm sm:text-base
-              cursor-pointer whitespace-nowrap shrink-0'>Login</button>
+            <button onClick={openSignIn} className='shrink-0 px-3 py-1.5 sm:px-6 sm:py-2 bg-primary
+              hover:bg-primary-dull transition rounded-full font-medium text-xs sm:text-sm
+              cursor-pointer whitespace-nowrap text-white'>Login</button>
           ) : (
-            <UserButton>
-              <UserButton.MenuItems>
-                <UserButton.Action label="My Bookings" labelIcon={<TicketPlus width={15} />}
-                  onClick={() => navigate('/my-bookings')} />
-              </UserButton.MenuItems>
-            </UserButton>
+            <div className="shrink-0">
+              <UserButton>
+                <UserButton.MenuItems>
+                  <UserButton.Action label="My Bookings" labelIcon={<TicketPlus width={15} />}
+                    onClick={() => navigate('/my-bookings')} />
+                </UserButton.MenuItems>
+              </UserButton>
+            </div>
           )}
-        </div>
 
-        <MenuIcon className='max-md:ml-2 sm:max-md:ml-4 md:hidden w-7 h-7 sm:w-8 sm:h-8 cursor-pointer shrink-0'
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        />
+          <MenuIcon className='md:hidden w-6 h-6 sm:w-7 sm:h-7 cursor-pointer shrink-0'
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          />
+        </div>
       </div>
     </>
   );
