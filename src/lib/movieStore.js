@@ -1,171 +1,72 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  movieStore.js  —  Central persistent movie store
-//
-//  WHY THIS EXISTS:
-//  assets.js is a static JS file. addMovieToDummyData() only mutates the
-//  in-memory array — it resets on every page refresh. This store uses
-//  localStorage so added movies survive refreshes AND are visible to users.
-//
-//  HOW IT WORKS:
-//  1. dummyShowsData (assets.js)  = your permanent base movies
-//  2. localStorage["tixrush_movies"] = admin-added movies (persistent)
-//  3. getAllMovies() = dummyShowsData + localStorage movies combined
-//
-//  USAGE in any component:
-//  import { getAllMovies, addMovie, removeMovie, updateMovie } from "../lib/movieStore";
-//  const movies = getAllMovies();   // always up-to-date merged list
+//  movieStore.js — now backed by the real database via the backend API.
+//  Movies added by admin are visible to every user on every device immediately,
+//  since they're fetched from the server instead of a per-browser localStorage.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { dummyShowsData } from "../assets/assets";
 
-const STORAGE_KEY = "tixrush_movies";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
-// ─────────────────────────────────────────────
-//  READ
-// ─────────────────────────────────────────────
-
-/** Returns admin-added movies from localStorage */
-export const getStoredMovies = () => {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-    } catch {
-        return [];
-    }
+/** Fetch admin-added movies from the backend */
+export const fetchDbMovies = async () => {
+  try {
+    const res = await fetch(`${API_URL}/movies`);
+    if (!res.ok) throw new Error(`Failed to fetch movies (${res.status})`);
+    return await res.json();
+  } catch (err) {
+    console.error("movieStore: failed to fetch DB movies", err);
+    return [];
+  }
 };
 
 /**
- * Returns ALL movies: base dummyShowsData + admin-added ones.
- * This is what every component should call instead of importing dummyShowsData directly.
+ * Returns ALL movies: base dummyShowsData + DB movies (admin-added).
+ * This is async now — callers must await it.
  */
-export const getAllMovies = () => {
-    const stored = getStoredMovies();
-    // Put admin-added movies first so they appear at the top
-    return [...stored, ...dummyShowsData];
+export const getAllMovies = async () => {
+  const dbMovies = await fetchDbMovies();
+  return [...dbMovies, ...dummyShowsData];
 };
 
-/**
- * Find a single movie by id or _id
- */
-export const findMovieById = (id) => {
-    return getAllMovies().find(
-        (m) => String(m.id) === String(id) || String(m._id) === String(id)
-    );
+export const findMovieById = async (id) => {
+  const all = await getAllMovies();
+  return all.find((m) => String(m.id) === String(id) || String(m._id) === String(id));
 };
 
-// ─────────────────────────────────────────────
-//  WRITE
-// ─────────────────────────────────────────────
-
-/**
- * Save admin-added movies list back to localStorage
- */
-const saveStoredMovies = (movies) => {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(movies));
-    } catch (e) {
-        console.error("movieStore: failed to save to localStorage", e);
-    }
+/** Add a new movie via the backend */
+export const addMovie = async (movieData) => {
+  const res = await fetch(`${API_URL}/movies`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(movieData),
+  });
+  if (!res.ok) throw new Error(`Failed to add movie (${res.status})`);
+  return await res.json();
 };
 
-/**
- * Add a new movie (called by AddMovie admin page).
- * Generates a unique id and saves to localStorage.
- *
- * @param {object} movieData - movie object matching dummyShowsData shape
- * @returns {object} - the saved movie with id assigned
- */
-export const addMovie = (movieData) => {
-    const stored  = getStoredMovies();
-
-    // Generate unique numeric id (higher than any existing id)
-    const allIds  = getAllMovies().map((m) => Number(m.id) || 0);
-    const newId   = Math.max(...allIds, 100000) + 1;
-
-    const movie = {
-        ...movieData,
-        _id:        String(newId),
-        id:         newId,
-        vote_count: movieData.vote_count ?? 0,
-        addedAt:    new Date().toISOString(),
-        addedBy:    "admin",
-    };
-
-    saveStoredMovies([movie, ...stored]); // newest first
-    return movie;
+/** Update an existing admin-added movie via the backend */
+export const updateMovie = async (id, updatedData) => {
+  const res = await fetch(`${API_URL}/movies/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updatedData),
+  });
+  if (!res.ok) return null;
+  return await res.json();
 };
 
-/**
- * Update an existing admin-added movie
- * 
- * @param {number|string} id - The ID of the movie to update
- * @param {object} updatedData - The updated movie data
- * @returns {object|null} - The updated movie or null if not found or is base movie
- */
-export const updateMovie = (id, updatedData) => {
-    const stored = getStoredMovies();
-    const movieIndex = stored.findIndex(
-        (m) => String(m.id) === String(id) || String(m._id) === String(id)
-    );
-    
-    // Check if movie exists in stored (admin-added) movies
-    if (movieIndex === -1) {
-        console.warn("updateMovie: Movie not found or is a base movie (cannot edit base movies)");
-        return null;
-    }
-    
-    const existingMovie = stored[movieIndex];
-    
-    // Preserve original ID and metadata, update only the provided fields
-    const updatedMovie = {
-        ...existingMovie,
-        ...updatedData,
-        id: existingMovie.id,           // Preserve original ID
-        _id: existingMovie._id,         // Preserve original _id
-        addedAt: existingMovie.addedAt, // Preserve original added date
-        addedBy: existingMovie.addedBy, // Preserve original added by
-        updatedAt: new Date().toISOString(), // Add update timestamp
-    };
-    
-    // Create new array with the updated movie
-    const newStored = [...stored];
-    newStored[movieIndex] = updatedMovie;
-    saveStoredMovies(newStored);
-    
-    console.log("✅ Movie updated in localStorage:", updatedMovie);
-    return updatedMovie;
+/** Remove a movie via the backend (cannot remove base dummy movies) */
+export const removeMovie = async (id) => {
+  const res = await fetch(`${API_URL}/movies/${id}`, { method: "DELETE" });
+  return res.ok;
 };
 
-/**
- * Remove a movie by id from localStorage (cannot remove base movies).
- * @returns {boolean} true if removed, false if it was a base movie
- */
-export const removeMovie = (id) => {
-    const stored  = getStoredMovies();
-    const isStored = stored.some(
-        (m) => String(m.id) === String(id) || String(m._id) === String(id)
-    );
-    if (!isStored) return false; // base movies can't be removed via this fn
+/** Count of admin-added (DB) movies */
+export const getStoredMovieCount = async () => (await fetchDbMovies()).length;
 
-    saveStoredMovies(
-        stored.filter((m) => String(m.id) !== String(id) && String(m._id) !== String(id))
-    );
-    return true;
-};
+/** Total movies count (base + DB) */
+export const getTotalMovieCount = async () => (await getAllMovies()).length;
 
-/**
- * Clear all admin-added movies (reset localStorage to base data only)
- */
-export const clearStoredMovies = () => {
-    localStorage.removeItem(STORAGE_KEY);
-};
-
-/**
- * Count of admin-added movies
- */
-export const getStoredMovieCount = () => getStoredMovies().length;
-
-/**
- * Total movies count (base + stored)
- */
-export const getTotalMovieCount = () => getAllMovies().length;
+/** Admin-added movies only (for the "Show Added" list in AddMovie.jsx) */
+export const getStoredMovies = async () => await fetchDbMovies();

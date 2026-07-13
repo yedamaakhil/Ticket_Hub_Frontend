@@ -3,31 +3,23 @@ import { Link, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { MenuIcon, SearchIcon, TicketPlus, XIcon } from "lucide-react";
 import { useClerk, UserButton, useUser } from '@clerk/react';
-import { getAllMovies } from '../lib/movieStore';
+import { useMovies } from '../hooks/useMovies';
 
 function NavBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [allMovies, setAllMovies] = useState([]);
-  const [totalMovies, setTotalMovies] = useState(0);
   const searchRef = useRef(null);
+
+  // ★ Movies now come from the shared hook — same data for every user/device,
+  //   fetched from the real database instead of localStorage.
+  const { movies: allMovies } = useMovies();
+  const totalMovies = allMovies.length;
 
   const { user } = useUser();
   const { openSignIn } = useClerk();
   const navigate = useNavigate();
-
-  const loadMovies = () => {
-    const movies = getAllMovies();
-    setAllMovies(movies);
-    setTotalMovies(movies.length);
-    return movies;
-  };
-
-  useEffect(() => {
-    loadMovies();
-  }, []);
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -68,8 +60,6 @@ function NavBar() {
   const handleSearchClick = () => {
     setIsSearchOpen(!isSearchOpen);
     if (!isSearchOpen) {
-      const freshMovies = loadMovies();
-      console.log(`📽️ Search opened - ${freshMovies.length} movies available (including admin-added)`);
       setTimeout(() => {
         const searchInput = document.getElementById('search-input');
         if (searchInput) searchInput.focus();
@@ -107,7 +97,7 @@ function NavBar() {
     <>
       <div className='fixed top-0 left-0 z-50 w-full flex items-center
         justify-between gap-2 px-3 sm:px-6 md:px-16 lg:px-36 py-3 sm:py-4
-        bg-black/5 backdrop-blur border-b border-white/5'>
+        bg-black/50 backdrop-blur border-b border-white/5'>
 
         {/* Logo — same height-based sizing as LandingPage so it's visually identical everywhere */}
         <Link to='/' className='min-w-0 shrink flex items-center'>

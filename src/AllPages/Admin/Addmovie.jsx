@@ -19,15 +19,8 @@ import {
     SaveIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import {
-    addMovie,
-    getAllMovies,
-    getStoredMovies,
-    removeMovie,
-    getStoredMovieCount,
-    getTotalMovieCount,
-    updateMovie,
-} from "../../lib/movieStore";
+import { addMovie, removeMovie, updateMovie } from "../../lib/movieStore";
+import { useMovies } from "../../hooks/useMovies";
 import {
     THEATER_NAMES,
     ALL_SCREEN_IDS,
@@ -194,14 +187,17 @@ const firstTheaterWithFreeScreen = (occupancy) => {
 //  MAIN COMPONENT
 // ─────────────────────────────────────────────
 function AddMovie() {
+    // ★ Movies now come from the shared hook, which fetches the real DB via
+    //   the backend API — same data on every device, no localStorage.
+    const { movies: allMovies, loading: moviesLoading, refresh: refreshMovies } = useMovies();
+    const storedMovies = allMovies.filter((m) => m.addedBy === "admin");
+
     const [form,           setForm]           = useState(null);
     const [selectedGenres, setSelectedGenres] = useState([]);
     const [casts,          setCasts]          = useState([{ name: "", character: "", profile_path: "" }]);
     const [submitting,     setSubmitting]     = useState(false);
     const [success,        setSuccess]        = useState(false);
     const [previewImg,     setPreviewImg]     = useState(null);
-    const [storedMovies,   setStoredMovies]   = useState([]);
-    const [allMovies,      setAllMovies]      = useState([]);
     const [showAdded,      setShowAdded]      = useState(false);
     const [isEditMode,     setIsEditMode]     = useState(false);
     const [editingMovieId, setEditingMovieId] = useState(null);
@@ -211,13 +207,8 @@ function AddMovie() {
         [allMovies, editingMovieId]
     );
 
-    const refreshMovies = () => {
-        setStoredMovies(getStoredMovies());
-        setAllMovies(getAllMovies());
-    };
-
     const buildEmptyForm = () => {
-        const occ = buildOccupancy(getAllMovies(), null);
+        const occ = buildOccupancy(allMovies, null);
         const theater = firstTheaterWithFreeScreen(occ);
         const free = getFreeScreenIds(theater, occ);
         return {
@@ -237,10 +228,14 @@ function AddMovie() {
         };
     };
 
+    // Build the initial empty form once movies have finished loading, so the
+    // occupancy calculation (which theater/screen are free) is accurate.
     useEffect(() => {
-        refreshMovies();
-        setForm(buildEmptyForm());
-    }, []);
+        if (!moviesLoading && !form) {
+            setForm(buildEmptyForm());
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [moviesLoading]);
 
     const freeScreenIds = form ? getFreeScreenIds(form.theater, occupancy) : [];
     const allowedScreenIds = (() => {
@@ -345,7 +340,7 @@ function AddMovie() {
         toast.success(`Editing "${movie.title}"`, { duration: 3000 });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
         setSubmitting(true);
@@ -378,49 +373,57 @@ function AddMovie() {
             movieData.trailerUrl = form.trailerUrl.trim();
         }
 
-        let saved;
-
-        if (isEditMode && editingMovieId) {
-            saved = updateMovie(editingMovieId, movieData);
-            if (saved) {
-                toast.success(`"${movieData.title}" updated successfully! 🎬`, { duration: 4000 });
+        try {
+            if (isEditMode && editingMovieId) {
+                const saved = await updateMovie(editingMovieId, movieData);
+                if (saved) {
+                    toast.success(`"${movieData.title}" updated successfully! 🎬`, { duration: 4000 });
+                } else {
+                    toast.error("Failed to update movie. Movie not found or is a base movie.");
+                    setSubmitting(false);
+                    return;
+                }
             } else {
-                toast.error("Failed to update movie. Movie not found or is a base movie.");
-                setSubmitting(false);
-                return;
+                const saved = await addMovie(movieData);
+                console.log("✅ Movie saved:", saved);
+                toast.success(`"${movieData.title}" added! Visible to all users now. 🎬`, { duration: 4000 });
             }
-        } else {
-            saved = addMovie(movieData);
-            toast.success(`"${movieData.title}" added! Visible to users now. 🎬`, { duration: 4000 });
+
+            await refreshMovies();
+
+            setSuccess(true);
+            setShowAdded(true);
+
+            setTimeout(() => {
+                resetForm();
+                setSuccess(false);
+            }, 2000);
+        } catch (err) {
+            console.error("❌ Failed to save movie:", err);
+            toast.error("Something went wrong saving the movie. Please try again.");
+        } finally {
+            setSubmitting(false);
         }
-
-        refreshMovies();
-        console.log("✅ Movie saved:", saved);
-        console.log("📦 All movies now:", getAllMovies().length);
-
-        setSuccess(true);
-        setSubmitting(false);
-        setShowAdded(true);
-
-        setTimeout(() => {
-            resetForm();
-            setSuccess(false);
-        }, 2000);
     };
 
-    const handleRemove = (id) => {
+    const handleRemove = async (id) => {
         if (!window.confirm("Are you sure you want to remove this movie? This action cannot be undone.")) {
             return;
         }
-        const removed = removeMovie(id);
-        if (removed) {
-            refreshMovies();
-            toast.success("Movie removed.");
-            if (editingMovieId === id) {
-                resetForm();
+        try {
+            const removed = await removeMovie(id);
+            if (removed) {
+                await refreshMovies();
+                toast.success("Movie removed.");
+                if (editingMovieId === id) {
+                    resetForm();
+                }
+            } else {
+                toast.error("Base movies cannot be removed.");
             }
-        } else {
-            toast.error("Base movies cannot be removed.");
+        } catch (err) {
+            console.error("❌ Failed to remove movie:", err);
+            toast.error("Failed to remove movie.");
         }
     };
 
@@ -439,11 +442,11 @@ function AddMovie() {
             <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mt-4 sm:mt-6 mb-4 sm:mb-6 max-w-4xl">
                 <div className="flex gap-2 sm:gap-3 flex-wrap">
                     <div className="bg-primary/10 border border-primary/20 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-center">
-                        <p className="text-primary font-bold text-lg sm:text-xl">{getTotalMovieCount()}</p>
+                        <p className="text-primary font-bold text-lg sm:text-xl">{allMovies.length}</p>
                         <p className="text-gray-500 text-[10px] sm:text-xs">Total Movies</p>
                     </div>
                     <div className="bg-green-500/10 border border-green-500/20 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-center">
-                        <p className="text-green-400 font-bold text-lg sm:text-xl">{getStoredMovieCount()}</p>
+                        <p className="text-green-400 font-bold text-lg sm:text-xl">{storedMovies.length}</p>
                         <p className="text-gray-500 text-[10px] sm:text-xs">Admin Added</p>
                     </div>
                 </div>
@@ -469,7 +472,7 @@ function AddMovie() {
                 <p className="text-gray-400 text-[10px] sm:text-xs leading-relaxed">
                     {isEditMode 
                         ? "You are currently editing an existing movie. Make your changes and click 'Update Movie' to save."
-                        : "Each screen holds one movie. Theaters and screens that are already taken are disabled below — only free slots can be picked."
+                        : "Each screen holds one movie. Theaters and screens that are already taken are disabled below — only free slots can be picked. Movies you add here are saved to the database and visible to every user on every device."
                     }
                 </p>
             </div>
