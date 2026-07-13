@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 import { useUser } from "@clerk/react";
+import toast from "react-hot-toast";
 import AdminNavbar from "../../Components/Admin/AdminNavbar";
 import AdminSidebar from "../../Components/Admin/AdminSidebar";
 
@@ -11,6 +13,19 @@ const ADMIN_IDS = new Set(
 
 function Layout() {
     const { user, isLoaded } = useUser();
+
+    // Show toast BEFORE redirect so it persists on the landing page
+    useEffect(() => {
+        if (!isLoaded) return;
+        if (!user) {
+            toast.error("Please sign in to access the admin panel.", { id: "admin-auth" });
+        } else if (!ADMIN_IDS.has(user.id)) {
+            toast.error("⛔ Access denied. Only admins can access this page.", {
+                id: "admin-auth",
+                duration: 4000,
+            });
+        }
+    }, [isLoaded, user]);
 
     if (!isLoaded) {
         return (
