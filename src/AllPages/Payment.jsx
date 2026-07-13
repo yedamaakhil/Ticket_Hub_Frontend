@@ -11,11 +11,11 @@ import IsoTimeFormate from '../lib/IsoTimeFormate';
 import RazorpayModal from '../Components/RazorpayModal';
 import TaxBreakdown from '../Components/TaxBreakdown';
 import { API_BASE } from '../lib/config';
+import { useSeatLock } from '../hooks/useSeatLock';
 
 // ─────────────────────────────────────────────
 //  CONSTANTS
 // ─────────────────────────────────────────────
-
 const SEAT_PRICING = {
   economy:  { rows: ["A","B"],                                price: 150, label: "Economy"  },
   standard: { rows: ["C","D","E","F","G","H","I","J"],        price: 300, label: "Standard" },
@@ -83,9 +83,20 @@ function Payment() {
 
   if (!state) return <NoBooking navigate={navigate} />;
 
-  const { movie, selectedSeats, selectedTime, selectedDate, totalPrice } = state;
+  const { movie, selectedSeats, selectedTime, selectedDate, sessionId } = state;
 
-  // ── Tax calculation ──
+  // ── Keep the seat lock alive while the user is on this page. ─────────────
+  // The hook's unmount cleanup releases locks if the user navigates away
+  // without completing payment (browser back, close tab, etc.).
+  const { releaseLocks } = useSeatLock({
+    movieId:   movie?.id,
+    date:      selectedDate,
+    time:      selectedTime?.time,
+    sessionId,
+    enabled:   !!selectedTime,
+  });
+
+  // ── Tax calculation ───────────────────────────────────────────────────────
   const { baseTotal, grandTotal, taxes } = useMemo(() => {
     const base = selectedSeats.reduce((s, seat) => s + getSeatPrice(seat[0]), 0);
     const gst  = Math.round(base * TAX_RATES.GST);
@@ -104,8 +115,6 @@ function Payment() {
   });
 
   // ── Called by RazorpayModal after payment is VERIFIED on backend ──────────
-  // paymentMethod = "UPI" | "CARD" | "NET_BANKING"
-  // razorpayPayId = "pay_xxxxx" from Razorpay
   const handlePaymentSuccess = useCallback(async (paymentMethod, razorpayPayId) => {
     setIsProcessing(true);
     setShowRazorpay(false);
@@ -118,7 +127,10 @@ function Payment() {
                         ?? "";
 
       if (!primaryEmail) {
-        toast.error("No email on your account — add an email in your profile to receive tickets.", { id: loadingToast });
+        toast.error(
+          "No email on your account — add an email in your profile to receive tickets.",
+          { id: loadingToast }
+        );
         setIsProcessing(false);
         return;
       }
@@ -141,6 +153,7 @@ function Payment() {
         screenName:        selectedTime.screen ? `Screen ${selectedTime.screen}` : "Screen 1",
         userEmail:         primaryEmail,
         clerkUserId:       user?.id ?? "",
+        sessionId,         // ★ backend releases locks after inserting BookedSeats
       };
 
       const res = await fetch(`${API_BASE}/api/bookings`, {
@@ -154,15 +167,27 @@ function Payment() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
+
         if (res.status === 409) {
-          toast.error("These seats are no longer available!", { id: loadingToast });
-          setTimeout(() => navigate("/movies"), 2000);
+          // ★ Seats were snatched after payment — release our locks and send
+          //   the user back to pick again.
+          await releaseLocks();
+          toast.error(
+            "These seats are no longer available! Please select different seats.",
+            { id: loadingToast, duration: 4000 }
+          );
+          setTimeout(() => navigate(-1), 2000);
           return;
         }
+
+        // Any other server error — release locks so the seat becomes available again
+        await releaseLocks();
         throw new Error(errData.message || `Server error ${res.status}`);
       }
 
       const data = await res.json();
+      // Locks released by backend inside BookingService.createBooking; no need
+      // to call releaseLocks() here.
 
       if (data.emailSent) {
         toast.success("Booking confirmed! 🎉 Ticket sent to your email.", {
@@ -178,12 +203,12 @@ function Payment() {
         navigate("/my-bookings/confirmation", {
           state: {
             movie, selectedSeats, selectedTime, selectedDate,
-            totalPrice:    grandTotal,
-            bookingRef:    data.bookingRef,
-            transactionId: data.transactionId,
-            bookingId:     data.id,
-            userEmail:     primaryEmail,
-            emailSent:     data.emailSent,
+            totalPrice:      grandTotal,
+            bookingRef:      data.bookingRef,
+            transactionId:   data.transactionId,
+            bookingId:       data.id,
+            userEmail:       primaryEmail,
+            emailSent:       data.emailSent,
             emailPreviewUrl: data.emailPreviewUrl,
           },
         });
@@ -191,25 +216,34 @@ function Payment() {
 
     } catch (err) {
       console.error("Booking save error:", err);
+      // Release locks on any unhandled error so seats become available again
+      await releaseLocks();
       toast.error(`Booking failed: ${err.message}`, { id: loadingToast });
     } finally {
       setIsProcessing(false);
     }
-  }, [movie, selectedSeats, selectedTime, selectedDate, grandTotal, user, getToken, navigate]);
+  }, [movie, selectedSeats, selectedTime, selectedDate, grandTotal, user, getToken, navigate, sessionId, releaseLocks]);
+
+  // ── Called when user closes RazorpayModal without paying ─────────────────
+  const handlePaymentClose = useCallback(async () => {
+    setShowRazorpay(false);
+    // ★ Do NOT release locks here — the user may want to retry payment.
+    // Locks will auto-expire after 10 min or be released on page unmount.
+  }, []);
 
   // ─────────────────────────────────────────────
   //  RENDER
   // ─────────────────────────────────────────────
   return (
     <div className="px-4 sm:px-6 md:px-16 lg:px-40 py-24 sm:py-30 md:pt-40 min-h-screen">
-      <BlurCircle top="0" left="0" />
+      <BlurCircle top="0"    left="0"  />
       <BlurCircle bottom="0" right="0" />
 
       {showRazorpay && (
         <RazorpayModal
           totalPrice={grandTotal}
           movieTitle={movie.title}
-          onClose={() => setShowRazorpay(false)}
+          onClose={handlePaymentClose}
           onSuccess={handlePaymentSuccess}
         />
       )}
@@ -248,13 +282,12 @@ function Payment() {
             <img
               src={movie.poster_path}
               alt={movie.title}
-              className="w-full sm:w-28 h-48 sm:h-40 object-cover rounded-xl flex-shrink-0 mx-auto sm:mx-0 max-w-[200px] sm:max-w-none"
+              className="w-full sm:w-28 h-48 sm:h-40 object-cover rounded-xl flex-shrink-0
+                         mx-auto sm:mx-0 max-w-[200px] sm:max-w-none"
             />
             <div className="flex flex-col justify-center gap-2">
               <h2 className="text-xl font-bold text-white">{movie.title}</h2>
-              <p className="text-gray-400 text-xs">
-                {movie.genres?.map(g => g.name).join(", ")}
-              </p>
+              <p className="text-gray-400 text-xs">{movie.genres?.map(g => g.name).join(", ")}</p>
               <p className="text-gray-400 text-xs">
                 {timeFormat(movie.runtime)} &nbsp;|&nbsp; {movie.release_date?.split("-")[0]}
               </p>
@@ -343,6 +376,14 @@ function Payment() {
             </p>
             <p className="text-gray-500 text-xs mt-1">
               {selectedSeats.length} seat{selectedSeats.length > 1 ? "s" : ""} · incl. all taxes
+            </p>
+          </div>
+
+          {/* ★ Lock notice */}
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-center">
+            <p className="text-amber-400 text-xs font-medium">🔒 Seats reserved for 10 minutes</p>
+            <p className="text-gray-500 text-xs mt-1">
+              Your selected seats are held while you complete payment.
             </p>
           </div>
 
