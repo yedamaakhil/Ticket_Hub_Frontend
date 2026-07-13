@@ -19,11 +19,17 @@ import {
     SaveIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { addMovie, removeMovie, updateMovie } from "../../lib/movieStore";
-import { useMovies } from "../../hooks/useMovies";
+import {
+    addMovie,
+    getAllMovies,
+    getStoredMovies,
+    removeMovie,
+    updateMovie,
+} from "../../lib/movieStore";
+// NOTE: getTotalMovieCount / getStoredMovieCount removed — they are async and
+//       the counts are derived from state arrays directly now.
 import {
     THEATER_NAMES,
-    ALL_SCREEN_IDS,
     SCREEN_CATALOG,
     getScreenIdsForTheater,
 } from "../../lib/theaterdata";
@@ -184,62 +190,88 @@ const firstTheaterWithFreeScreen = (occupancy) => {
 };
 
 // ─────────────────────────────────────────────
+//  buildEmptyForm — now takes the allMovies list
+//  as a parameter (no longer calls getAllMovies
+//  synchronously, which would return a Promise).
+// ─────────────────────────────────────────────
+const buildEmptyForm = (allMoviesList) => {
+    const occ = buildOccupancy(allMoviesList, null);
+    const theater = firstTheaterWithFreeScreen(occ);
+    const free = getFreeScreenIds(theater, occ);
+    return {
+        id: "",
+        title: "",
+        overview: "",
+        poster_path: "",
+        backdrop_path: "",
+        trailerUrl: "",
+        release_date: "",
+        original_language: "Telugu",
+        tagline: "",
+        runtime: "",
+        vote_average: "",
+        theater,
+        screen: free[0] || "",
+    };
+};
+
+// ─────────────────────────────────────────────
 //  MAIN COMPONENT
 // ─────────────────────────────────────────────
 function AddMovie() {
-    // ★ Movies now come from the shared hook, which fetches the real DB via
-    //   the backend API — same data on every device, no localStorage.
-    const { movies: allMovies, loading: moviesLoading, refresh: refreshMovies } = useMovies();
-    const storedMovies = allMovies.filter((m) => m.addedBy === "admin");
-
     const [form,           setForm]           = useState(null);
     const [selectedGenres, setSelectedGenres] = useState([]);
     const [casts,          setCasts]          = useState([{ name: "", character: "", profile_path: "" }]);
     const [submitting,     setSubmitting]     = useState(false);
     const [success,        setSuccess]        = useState(false);
     const [previewImg,     setPreviewImg]     = useState(null);
+    const [storedMovies,   setStoredMovies]   = useState([]);
+    const [allMovies,      setAllMovies]      = useState([]);
     const [showAdded,      setShowAdded]      = useState(false);
     const [isEditMode,     setIsEditMode]     = useState(false);
     const [editingMovieId, setEditingMovieId] = useState(null);
+    const [loadingMovies,  setLoadingMovies]  = useState(true);
 
     const occupancy = useMemo(
         () => buildOccupancy(allMovies, editingMovieId),
         [allMovies, editingMovieId]
     );
 
-    const buildEmptyForm = () => {
-        const occ = buildOccupancy(allMovies, null);
-        const theater = firstTheaterWithFreeScreen(occ);
-        const free = getFreeScreenIds(theater, occ);
-        return {
-            id: "",
-            title: "",
-            overview: "",
-            poster_path: "",
-            backdrop_path: "",
-            trailerUrl: "",
-            release_date: "",
-            original_language: "Telugu",
-            tagline: "",
-            runtime: "",
-            vote_average: "",
-            theater,
-            screen: free[0] || "",
-        };
+    // ── refreshMovies is async now — MUST await all store calls ──────────────
+    const refreshMovies = async () => {
+        try {
+            const [stored, all] = await Promise.all([
+                getStoredMovies(),
+                getAllMovies(),
+            ]);
+            setStoredMovies(stored);
+            setAllMovies(all);
+            return { stored, all };
+        } catch (err) {
+            console.error("AddMovie: failed to load movies", err);
+            toast.error("Failed to load movies from server");
+            return { stored: [], all: [] };
+        }
     };
 
-    // Build the initial empty form once movies have finished loading, so the
-    // occupancy calculation (which theater/screen are free) is accurate.
+    // ── On mount: load movies then build empty form ───────────────────────────
     useEffect(() => {
-        if (!moviesLoading && !form) {
-            setForm(buildEmptyForm());
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [moviesLoading]);
+        let cancelled = false;
+        (async () => {
+            setLoadingMovies(true);
+            const { all } = await refreshMovies();
+            if (!cancelled) {
+                setForm(buildEmptyForm(all));
+                setLoadingMovies(false);
+            }
+        })();
+        return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const freeScreenIds = form ? getFreeScreenIds(form.theater, occupancy) : [];
     const allowedScreenIds = (() => {
-        if (!form) return [];
+        if (!form) return new Set();
         const set = new Set(freeScreenIds.map(String));
         if (isEditMode && form.screen) set.add(String(form.screen));
         return set;
@@ -290,8 +322,9 @@ function AddMovie() {
         return true;
     };
 
-    const resetForm = () => {
-        setForm(buildEmptyForm());
+    const resetForm = async () => {
+        const { all } = await refreshMovies();
+        setForm(buildEmptyForm(all));
         setSelectedGenres([]);
         setCasts([{ name: "", character: "", profile_path: "" }]);
         setPreviewImg(null);
@@ -325,8 +358,8 @@ function AddMovie() {
 
         if (movie.casts && Array.isArray(movie.casts) && movie.casts.length > 0) {
             setCasts(movie.casts.map(cast => ({
-                name: cast.name || "",
-                character: cast.character || "",
+                name:         cast.name || "",
+                character:    cast.character || "",
                 profile_path: cast.profile_path || "",
             })));
         } else {
@@ -340,6 +373,7 @@ function AddMovie() {
         toast.success(`Editing "${movie.title}"`, { duration: 3000 });
     };
 
+    // ── handleSubmit — MUST await addMovie / updateMovie (both are async) ─────
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
@@ -374,34 +408,37 @@ function AddMovie() {
         }
 
         try {
+            let saved;
+
             if (isEditMode && editingMovieId) {
-                const saved = await updateMovie(editingMovieId, movieData);
+                // ← await required — updateMovie is now async (calls backend)
+                saved = await updateMovie(editingMovieId, movieData);
                 if (saved) {
                     toast.success(`"${movieData.title}" updated successfully! 🎬`, { duration: 4000 });
                 } else {
-                    toast.error("Failed to update movie. Movie not found or is a base movie.");
+                    toast.error("Failed to update movie. Movie not found.");
                     setSubmitting(false);
                     return;
                 }
             } else {
-                const saved = await addMovie(movieData);
-                console.log("✅ Movie saved:", saved);
-                toast.success(`"${movieData.title}" added! Visible to all users now. 🎬`, { duration: 4000 });
+                // ← await required — addMovie is now async (calls backend)
+                saved = await addMovie(movieData);
+                toast.success(`"${movieData.title}" added! Visible to users now. 🎬`, { duration: 4000 });
             }
 
-            await refreshMovies();
+            console.log("✅ Movie saved:", saved);
 
             setSuccess(true);
+            setSubmitting(false);
             setShowAdded(true);
 
-            setTimeout(() => {
-                resetForm();
+            setTimeout(async () => {
+                await resetForm();
                 setSuccess(false);
             }, 2000);
         } catch (err) {
-            console.error("❌ Failed to save movie:", err);
-            toast.error("Something went wrong saving the movie. Please try again.");
-        } finally {
+            console.error("AddMovie save error:", err);
+            toast.error(`Failed to save: ${err.message}`);
             setSubmitting(false);
         }
     };
@@ -411,28 +448,38 @@ function AddMovie() {
             return;
         }
         try {
+            // ← await required — removeMovie is now async
             const removed = await removeMovie(id);
             if (removed) {
                 await refreshMovies();
                 toast.success("Movie removed.");
                 if (editingMovieId === id) {
-                    resetForm();
+                    await resetForm();
                 }
             } else {
-                toast.error("Base movies cannot be removed.");
+                toast.error("Failed to remove movie.");
             }
         } catch (err) {
-            console.error("❌ Failed to remove movie:", err);
-            toast.error("Failed to remove movie.");
+            toast.error(`Failed to remove: ${err.message}`);
         }
     };
 
-    const handleCancelEdit = () => {
-        resetForm();
+    const handleCancelEdit = async () => {
+        await resetForm();
         toast("Edit mode cancelled", { icon: "📝" });
     };
 
-    if (!form) return null;
+    if (loadingMovies || !form) {
+        return (
+            <div className="flex items-center justify-center py-20">
+                <span className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    // ── Derive counts directly from state (no async calls in render) ──────────
+    const totalMovieCount  = allMovies.length;
+    const storedMovieCount = storedMovies.length;
 
     return (
         <>
@@ -442,11 +489,11 @@ function AddMovie() {
             <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mt-4 sm:mt-6 mb-4 sm:mb-6 max-w-4xl">
                 <div className="flex gap-2 sm:gap-3 flex-wrap">
                     <div className="bg-primary/10 border border-primary/20 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-center">
-                        <p className="text-primary font-bold text-lg sm:text-xl">{allMovies.length}</p>
+                        <p className="text-primary font-bold text-lg sm:text-xl">{totalMovieCount}</p>
                         <p className="text-gray-500 text-[10px] sm:text-xs">Total Movies</p>
                     </div>
                     <div className="bg-green-500/10 border border-green-500/20 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-center">
-                        <p className="text-green-400 font-bold text-lg sm:text-xl">{storedMovies.length}</p>
+                        <p className="text-green-400 font-bold text-lg sm:text-xl">{storedMovieCount}</p>
                         <p className="text-gray-500 text-[10px] sm:text-xs">Admin Added</p>
                     </div>
                 </div>
@@ -470,9 +517,9 @@ function AddMovie() {
                     {isEditMode ? "✏️ Editing Mode" : "💾 Add New Movie"}
                 </p>
                 <p className="text-gray-400 text-[10px] sm:text-xs leading-relaxed">
-                    {isEditMode 
+                    {isEditMode
                         ? "You are currently editing an existing movie. Make your changes and click 'Update Movie' to save."
-                        : "Each screen holds one movie. Theaters and screens that are already taken are disabled below — only free slots can be picked. Movies you add here are saved to the database and visible to every user on every device."
+                        : "Each screen holds one movie. Theaters and screens that are already taken are disabled below — only free slots can be picked."
                     }
                 </p>
             </div>
@@ -485,9 +532,9 @@ function AddMovie() {
                     </p>
                     <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto pr-1">
                         {storedMovies.map((m) => (
-                            <StoredMovieRow 
-                                key={m.id} 
-                                movie={m} 
+                            <StoredMovieRow
+                                key={m.id}
+                                movie={m}
                                 onRemove={handleRemove}
                                 onEdit={loadMovieForEdit}
                             />
