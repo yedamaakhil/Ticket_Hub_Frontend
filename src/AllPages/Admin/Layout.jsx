@@ -3,10 +3,15 @@ import { useUser } from "@clerk/clerk-react";
 import AdminNavbar from "../../Components/Admin/AdminNavbar";
 import AdminSidebar from "../../Components/Admin/AdminSidebar";
 
+// Admin user IDs stored in VITE_ADMIN_USER_IDS env var (comma-separated)
+// e.g. VITE_ADMIN_USER_IDS=user_abc123,user_xyz456
+const ADMIN_IDS = new Set(
+    (import.meta.env.VITE_ADMIN_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean)
+);
+
 function Layout() {
     const { user, isLoaded } = useUser();
 
-    // Still loading Clerk session — show spinner
     if (!isLoaded) {
         return (
             <div className="flex items-center justify-center h-screen bg-[#0a0a0a]">
@@ -15,8 +20,8 @@ function Layout() {
         );
     }
 
-    // Not signed in OR not an admin → redirect to home
-    if (!user || user.publicMetadata?.role !== "admin") {
+    // Not signed in, OR user ID not in the allowed admin list → home
+    if (!user || !ADMIN_IDS.has(user.id)) {
         return <Navigate to="/" replace />;
     }
 
