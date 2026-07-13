@@ -2,9 +2,22 @@ import { useMovies } from "../hooks/useMovies";
 import BlurCircle from "../Components/BlurCircle";
 import MovieCard from "../Components/MovieCard";
 
+// Static movies in assets.js have IDs 1–14.
+// Added movies use Date.now() as ID (> 1,000,000,000,000).
+// So anything above 1000 is an "added" movie.
+const STATIC_ID_THRESHOLD = 1000;
+
 function Movies() {
   const { movies } = useMovies();
-  const sorted = [...movies].sort((a, b) => b.id - a.id);
+
+  // Added movies (from backend/admin) — newest first
+  const addedMovies = [...movies.filter(m => m.id > STATIC_ID_THRESHOLD)]
+    .sort((a, b) => b.id - a.id);
+
+  // Static movies (from assets.js) — original order preserved
+  const staticMovies = movies.filter(m => m.id <= STATIC_ID_THRESHOLD);
+
+  const sorted = [...addedMovies, ...staticMovies];
 
   return movies.length > 0 ? (
     <div className='relative my-24 sm:my-40 mb-40 sm:mb-60 px-4 sm:px-6 md:px-16 lg:px-40 xl:px-44 overflow-hidden min-h-[80vh]'>
