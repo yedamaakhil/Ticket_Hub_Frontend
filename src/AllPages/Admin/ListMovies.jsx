@@ -11,10 +11,9 @@ import {
     ClockIcon,
     CalendarIcon,
     MapPinIcon,
-    AlertCircleIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { getAllMovies, getStoredMovies, removeMovie, addMovie, clearStoredMovies } from "../../lib/movieStore";
+import { getAllMovies, getStoredMovies, removeMovie } from "../../lib/movieStore";
 import { dummyShowsData } from "../../assets/assets";
 
 // ─────────────────────────────────────────────
@@ -55,15 +54,16 @@ function ListMovies() {
     const [search, setSearch] = useState("");
     const [removing, setRemoving] = useState(null);
     const [storedIds, setStoredIds] = useState(new Set());
-    const [showDeleteAll, setShowDeleteAll] = useState(false);
 
-    const loadMovies = () => {
+    const loadMovies = async () => {
         setLoading(true);
         try {
-            const allMovies = getAllMovies();
+            const [allMovies, stored] = await Promise.all([
+                getAllMovies(),
+                getStoredMovies(),
+            ]);
             setMovies(allMovies);
-            const stored = getStoredMovies();
-            setStoredIds(new Set(stored.map(m => m.id)));
+            setStoredIds(new Set(stored.map((m) => m.id)));
         } catch (err) {
             console.error("ListMovies load error:", err);
             toast.error("Failed to load movies");
@@ -72,10 +72,10 @@ function ListMovies() {
         }
     };
 
-    const handleRemove = (movie) => {
-        const isBaseMovie = dummyShowsData.some(m => m.id === movie.id);
+    const handleRemove = async (movie) => {
+        const isBaseMovie = dummyShowsData.some((m) => m.id === movie.id);
         let warningMessage = `Are you sure you want to delete "${movie.title}"?\n\n`;
-        
+
         if (isBaseMovie) {
             warningMessage += `⚠️ This is a BASE MOVIE from dummyShowsData.\n`;
             warningMessage += `Deleting it will add it to an internal blocklist and it will NOT be visible to users.\n\n`;
@@ -84,11 +84,9 @@ function ListMovies() {
             warningMessage += `This is an admin-added movie.\n`;
             warningMessage += `This action cannot be undone and the movie will no longer be visible to users.`;
         }
-        
-        if (!window.confirm(warningMessage)) {
-            return;
-        }
-        
+
+        if (!window.confirm(warningMessage)) return;
+
         setRemoving(movie.id);
         try {
             if (isBaseMovie) {
@@ -99,18 +97,14 @@ function ListMovies() {
                 }
                 toast.success(`"${movie.title}" has been hidden from users.`);
             } else {
-                const removed = removeMovie(movie.id);
+                const removed = await removeMovie(movie.id);
                 if (!removed) {
                     toast.error("Failed to remove movie");
-                    setRemoving(null);
                     return;
                 }
-                toast.success(`"${movie.title}" removed successfully. Users will no longer see this movie.`);
+                toast.success(`"${movie.title}" removed successfully.`);
             }
-            
-            setTimeout(() => {
-                loadMovies();
-            }, 500);
+            await loadMovies();
         } catch (err) {
             toast.error(`Failed to remove: ${err.message}`);
         } finally {
@@ -118,15 +112,15 @@ function ListMovies() {
         }
     };
 
-    const handleDeleteAllAdminAdded = () => {
+    const handleDeleteAllAdminAdded = async () => {
         if (!window.confirm("Are you sure you want to delete ALL admin-added movies?\n\nThis action cannot be undone.")) {
             return;
         }
-        
         try {
-            clearStoredMovies();
+            const stored = await getStoredMovies();
+            await Promise.all(stored.map((m) => removeMovie(m.id)));
             toast.success("All admin-added movies have been deleted.");
-            loadMovies();
+            await loadMovies();
         } catch (err) {
             toast.error(`Failed to delete: ${err.message}`);
         }
@@ -136,7 +130,6 @@ function ListMovies() {
         if (!window.confirm("Are you sure you want to reset all hidden base movies?\n\nThis will make all original movies visible again to users.")) {
             return;
         }
-        
         try {
             localStorage.removeItem("tixrush_blocked_movies");
             toast.success("All base movies are now visible again.");
@@ -149,10 +142,9 @@ function ListMovies() {
     const getVisibleMovies = () => {
         const blockedMovies = JSON.parse(localStorage.getItem("tixrush_blocked_movies") || "[]");
         const blockedSet = new Set(blockedMovies);
-        
-        return movies.map(movie => ({
+        return movies.map((movie) => ({
             ...movie,
-            isBlocked: blockedSet.has(movie.id) && dummyShowsData.some(dm => dm.id === movie.id)
+            isBlocked: blockedSet.has(movie.id) && dummyShowsData.some((dm) => dm.id === movie.id),
         }));
     };
 
@@ -161,22 +153,22 @@ function ListMovies() {
     }, []);
 
     const visibleMovies = getVisibleMovies();
-    
-    const totalMovies = visibleMovies.length;
-    const baseMoviesCount = visibleMovies.filter(m => dummyShowsData.some(dm => dm.id === m.id)).length;
+
+    const totalMovies     = visibleMovies.length;
+    const baseMoviesCount = visibleMovies.filter((m) => dummyShowsData.some((dm) => dm.id === m.id)).length;
     const adminAddedCount = storedIds.size;
-    const blockedCount = visibleMovies.filter(m => m.isBlocked).length;
-    const avgRating = visibleMovies.reduce((sum, m) => sum + (m.vote_average || 0), 0) / (totalMovies || 1);
-    const totalRuntime = visibleMovies.reduce((sum, m) => sum + (m.runtime || 0), 0);
+    const blockedCount    = visibleMovies.filter((m) => m.isBlocked).length;
+    const avgRating       = visibleMovies.reduce((sum, m) => sum + (m.vote_average || 0), 0) / (totalMovies || 1);
+    const totalRuntime    = visibleMovies.reduce((sum, m) => sum + (m.runtime || 0), 0);
 
     const filtered = visibleMovies.filter((m) => {
         if (!search) return true;
         const q = search.toLowerCase();
         return (
-            (m.title?.toLowerCase().includes(q)) ||
-            (m.original_language?.toLowerCase().includes(q)) ||
-            (m.genres?.some((g) => g.name.toLowerCase().includes(q))) ||
-            (m.theater?.toLowerCase().includes(q))
+            m.title?.toLowerCase().includes(q) ||
+            m.original_language?.toLowerCase().includes(q) ||
+            m.genres?.some((g) => g.name.toLowerCase().includes(q)) ||
+            m.theater?.toLowerCase().includes(q)
         );
     });
 
@@ -188,11 +180,11 @@ function ListMovies() {
 
             {/* ── Stats ── */}
             <div className="flex flex-wrap gap-2 sm:gap-3 mt-4 sm:mt-6">
-                <StatPill label="Total" value={totalMovies} color="bg-primary/10 border-primary/20 text-primary" />
-                <StatPill label="Base" value={baseMoviesCount} color="bg-blue-500/10 border-blue-500/20 text-blue-400" />
-                <StatPill label="Admin Added" value={adminAddedCount} color="bg-green-500/10 border-green-500/20 text-green-400" />
-                <StatPill label="Blocked" value={blockedCount} color="bg-red-500/10 border-red-500/20 text-red-400" />
-                <StatPill label="Avg Rating" value={avgRating.toFixed(1)} color="bg-yellow-500/10 border-yellow-500/20 text-yellow-400" />
+                <StatPill label="Total"        value={totalMovies}              color="bg-primary/10 border-primary/20 text-primary" />
+                <StatPill label="Base"         value={baseMoviesCount}          color="bg-blue-500/10 border-blue-500/20 text-blue-400" />
+                <StatPill label="Admin Added"  value={adminAddedCount}          color="bg-green-500/10 border-green-500/20 text-green-400" />
+                <StatPill label="Blocked"      value={blockedCount}             color="bg-red-500/10 border-red-500/20 text-red-400" />
+                <StatPill label="Avg Rating"   value={avgRating.toFixed(1)}     color="bg-yellow-500/10 border-yellow-500/20 text-yellow-400" />
                 <StatPill label="Total Runtime" value={timeFormat(totalRuntime)} color="bg-purple-500/10 border-purple-500/20 text-purple-400" />
             </div>
 
@@ -202,15 +194,14 @@ function ListMovies() {
                     📋 Showing <strong>{filtered.length}</strong> of <strong>{totalMovies}</strong> movies.
                     <br className="sm:hidden" />
                     <span className="hidden sm:inline"> </span>
-                    ✅ <strong>Any movie can be deleted</strong> - Base movies are hidden, admin-added are removed.
+                    ✅ <strong>Any movie can be deleted</strong> — Base movies are hidden, admin-added are removed.
                 </p>
             </div>
 
             {/* ── Toolbar ── */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-5 max-w-5xl">
                 <div className="relative flex-1">
-                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2
-                                            w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500" />
+                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500" />
                     <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
@@ -228,7 +219,8 @@ function ListMovies() {
                                    rounded-full text-[10px] sm:text-xs text-gray-400 hover:text-white
                                    hover:border-primary/50 transition cursor-pointer flex-1 sm:flex-none"
                     >
-                        <RefreshCwIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">Refresh</span>
+                        <RefreshCwIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                        <span className="hidden sm:inline">Refresh</span>
                     </button>
 
                     {adminAddedCount > 0 && (
@@ -238,7 +230,8 @@ function ListMovies() {
                                        rounded-full text-[10px] sm:text-xs text-red-400 hover:text-red-300
                                        hover:border-red-500/50 transition cursor-pointer flex-1 sm:flex-none"
                         >
-                            <Trash2Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">Delete All Admin</span>
+                            <Trash2Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                            <span className="hidden sm:inline">Delete All Admin</span>
                         </button>
                     )}
 
@@ -249,7 +242,8 @@ function ListMovies() {
                                        rounded-full text-[10px] sm:text-xs text-yellow-400 hover:text-yellow-300
                                        hover:border-yellow-500/50 transition cursor-pointer flex-1 sm:flex-none"
                         >
-                            <RefreshCwIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">Reset Hidden</span>
+                            <RefreshCwIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                            <span className="hidden sm:inline">Reset Hidden</span>
                         </button>
                     )}
                 </div>
@@ -272,26 +266,38 @@ function ListMovies() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
                         {filtered.map((movie) => {
                             const isAdminAdded = storedIds.has(movie.id);
-                            const isBaseMovie = dummyShowsData.some(dm => dm.id === movie.id);
-                            const isBlocked = movie.isBlocked;
-                            
+                            const isBaseMovie  = dummyShowsData.some((dm) => dm.id === movie.id);
+                            const isBlocked    = movie.isBlocked;
+
                             let borderColor = "border-primary/20 hover:border-primary/40";
                             let badge = null;
-                            
+
                             if (isBlocked) {
                                 borderColor = "border-red-500/50 hover:border-red-500/80 bg-red-500/5";
-                                badge = <div className="absolute top-2 right-2 bg-red-500/90 text-white text-[8px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-semibold">Hidden</div>;
+                                badge = (
+                                    <div className="absolute top-2 right-2 bg-red-500/90 text-white text-[8px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-semibold">
+                                        Hidden
+                                    </div>
+                                );
                             } else if (isAdminAdded) {
                                 borderColor = "border-green-500/30 hover:border-green-500/60";
-                                badge = <div className="absolute top-2 right-2 bg-green-500/90 text-white text-[8px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-semibold">Admin</div>;
+                                badge = (
+                                    <div className="absolute top-2 right-2 bg-green-500/90 text-white text-[8px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-semibold">
+                                        Admin
+                                    </div>
+                                );
                             } else if (isBaseMovie) {
-                                badge = <div className="absolute top-2 right-2 bg-blue-500/80 text-white text-[8px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Base</div>;
+                                badge = (
+                                    <div className="absolute top-2 right-2 bg-blue-500/80 text-white text-[8px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+                                        Base
+                                    </div>
+                                );
                             }
-                            
+
                             return (
                                 <div
                                     key={movie.id}
-                                    className={`bg-primary/5 border rounded-xl overflow-hidden 
+                                    className={`bg-primary/5 border rounded-xl overflow-hidden
                                                transition-all duration-300 hover:-translate-y-1
                                                ${borderColor}
                                                ${isBlocked ? "opacity-75" : ""}`}
@@ -309,7 +315,7 @@ function ListMovies() {
                                         {badge}
                                         {isBlocked && (
                                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                                <div className="bg-red-500/90 text-white text-[8px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-semibold text-center">
+                                                <div className="bg-red-500/90 text-white text-[8px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-semibold">
                                                     Hidden
                                                 </div>
                                             </div>
@@ -329,7 +335,7 @@ function ListMovies() {
                                         <h3 className="text-white font-bold text-sm sm:text-base truncate">
                                             {movie.title}
                                         </h3>
-                                        
+
                                         <p className="text-gray-400 text-[10px] sm:text-xs mt-1 line-clamp-2">
                                             {movie.overview || "No description available."}
                                         </p>
@@ -346,7 +352,7 @@ function ListMovies() {
                                             <div className="flex items-center gap-1 sm:gap-2 text-[9px] sm:text-xs text-gray-500">
                                                 <span className="text-primary text-[10px]">🎭</span>
                                                 <span className="truncate">
-                                                    {movie.genres?.map(g => g.name).join(", ") || "—"}
+                                                    {movie.genres?.map((g) => g.name).join(", ") || "—"}
                                                 </span>
                                             </div>
 
@@ -368,21 +374,19 @@ function ListMovies() {
                                         {/* Actions */}
                                         <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-primary/20 flex justify-between items-center">
                                             <button
-                                                onClick={() => {
-                                                    window.open(`/movie-details/${movie.id}`, "_blank");
-                                                }}
+                                                onClick={() => window.open(`/movie-details/${movie.id}`, "_blank")}
                                                 className="text-[10px] sm:text-xs text-primary hover:text-primary/80 transition py-1"
                                             >
                                                 View →
                                             </button>
-                                            
+
                                             <button
                                                 onClick={() => handleRemove(movie)}
                                                 disabled={removing === movie.id}
-                                                className={`flex items-center gap-1 text-[10px] sm:text-xs transition cursor-pointer 
+                                                className={`flex items-center gap-1 text-[10px] sm:text-xs transition cursor-pointer
                                                     disabled:opacity-50 py-1 px-1.5 sm:px-2 rounded-lg
-                                                    ${isBlocked 
-                                                        ? "text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10" 
+                                                    ${isBlocked
+                                                        ? "text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10"
                                                         : "text-red-400 hover:text-red-300 hover:bg-red-500/10"}`}
                                             >
                                                 {removing === movie.id ? (
