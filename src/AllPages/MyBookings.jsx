@@ -19,7 +19,7 @@ export default function MyBookings() {
         return res.json();
       })
       .then((data) => { 
-        setBookings(data); 
+      setBookings([...data].sort((a, b) => b.id - a.id)); 
         setLoading(false); 
       })
       .catch((err) => { 
