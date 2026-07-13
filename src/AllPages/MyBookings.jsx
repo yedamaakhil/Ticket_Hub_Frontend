@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useUser } from "@clerk/react";
 import Barcode from "react-barcode";
 
-// Get API URL from environment variables
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 export default function MyBookings() {
@@ -18,32 +17,24 @@ export default function MyBookings() {
         if (!res.ok) throw new Error(`Failed to fetch bookings (${res.status})`);
         return res.json();
       })
-      .then((data) => { 
-      setBookings([...data].sort((a, b) => b.id - a.id)); 
-        setLoading(false); 
+      .then((data) => {
+        setBookings(data); // no sort — show in API order
+        setLoading(false);
       })
-      .catch((err) => { 
-        setError(err.message); 
-        setLoading(false); 
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
       });
   }, [user]);
 
-  // FIXED: Simple time formatter that doesn't duplicate AM/PM
   const formatTime = (timeStr) => {
     if (!timeStr) return "N/A";
-    
-    // If time already has AM/PM, return it as is (just clean it up)
-    if (timeStr.includes("AM") || timeStr.includes("PM")) {
-      return timeStr.trim();
-    }
-    
-    // Otherwise, convert from 24-hour format
+    if (timeStr.includes("AM") || timeStr.includes("PM")) return timeStr.trim();
     const [hours, minutes] = timeStr.split(":");
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? "PM" : "AM";
     let displayHour = hour % 12;
     displayHour = displayHour === 0 ? 12 : displayHour;
-    
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
