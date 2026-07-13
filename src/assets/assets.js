@@ -383,7 +383,7 @@ export const dummyShowsData = [
         "title": "Dacoit",
         "overview": "A man is convicted for a crime he didn't commit owing to a betrayal by his better half. He hunts her down seeking vengeance, as their stories intertwine with a series of robberies.",
         "poster_path": "https://cdn.district.in/movies-assets/images/cinema/Dacoit_Poster%20(1)-1e2d2d20-3247-11f1-a005-63882a91c638.jpg",
-        "backdrop_path": "https://img.etimg.com/thumb/width-1200,height-1200,imgsize-51020,resizemode-75,msid-131487176/magazines/panache/dacoit-ott-release-in-hindi-confirmed-where-and-when-to-watch-adivi-sesh-mrunal-thakurs-telugu-movie-online.jpg",
+        "backdrop_path": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHfIJdsZ8ofxxpNmsuta-bVCAn8DoufnOQJfDnBd1xBrVNsr_GVCOWl-g&s=10",
         "genres": [
             {
                 id: 100,
