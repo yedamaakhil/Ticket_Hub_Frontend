@@ -129,9 +129,14 @@ const getOccupancyBarColor = (percentage) => {
     return "bg-green-500";
 };
 
-const resolveMovie = (movieId) => {
-    const allMovies = getAllMovies();
-    return allMovies.find((m) => String(m.id) === String(movieId) || String(m._id) === String(movieId));
+// ★ FIX: resolveMovie now takes the movies list as a parameter instead of
+//   calling getAllMovies() synchronously (which returns a Promise, not an array,
+//   causing "Ll(...).find is not a function" crash).
+const resolveMovie = (movieId, moviesList) => {
+    if (!Array.isArray(moviesList)) return null;
+    return moviesList.find(
+        (m) => String(m.id) === String(movieId) || String(m._id) === String(movieId)
+    );
 };
 
 // ─────────────────────────────────────────────
@@ -168,7 +173,7 @@ function StatCard({ title, value, icon: Icon, accent = "text-primary", loading, 
 }
 
 // ─────────────────────────────────────────────
-//  USERS MODAL (unchanged - already responsive)
+//  USERS MODAL
 // ─────────────────────────────────────────────
 function UsersModal({ open, onClose, users, loading }) {
     if (!open) return null;
@@ -259,10 +264,12 @@ function UsersModal({ open, onClose, users, loading }) {
 }
 
 // ─────────────────────────────────────────────
-//  ACTIVE SHOW CARD - Mobile responsive
+//  ACTIVE SHOW CARD
+//  ★ FIX: now receives allMovies as a prop instead of calling resolveMovie()
+//    which previously called getAllMovies() synchronously (returns Promise).
 // ─────────────────────────────────────────────
-function ShowCard({ show }) {
-    const movie = resolveMovie(show.movieId);
+function ShowCard({ show, allMovies }) {
+    const movie = resolveMovie(show.movieId, allMovies);
     const booked = Number(show.occupiedSeatsCount ?? 0);
     const total = getTotalSeatsForShow(show);
     const occupancy = calculateOccupancy(booked, total);
@@ -338,7 +345,7 @@ function ShowCard({ show }) {
 }
 
 // ─────────────────────────────────────────────
-//  RECENT BOOKING ROW - Mobile responsive
+//  RECENT BOOKING ROW
 // ─────────────────────────────────────────────
 function BookingRow({ booking, idx }) {
     const seatCount = Array.isArray(booking.seats) ? booking.seats.length : 0;
@@ -390,6 +397,7 @@ function Dashboard() {
     const [stats, setStats] = useState(null);
     const [bookings, setBookings] = useState([]);
     const [shows, setShows] = useState([]);
+    const [allMovies, setAllMovies] = useState([]); // ★ FIX: movies loaded into state
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -402,10 +410,13 @@ function Dashboard() {
         setLoading(true);
         setError(null);
         try {
-            const [statsRes, bookingsRes, showsRes] = await Promise.all([
+            // ★ FIX: load movies alongside stats/bookings/shows so resolveMovie
+            //   has a real array to work with (getAllMovies() is async).
+            const [statsRes, bookingsRes, showsRes, moviesData] = await Promise.all([
                 fetch(`${API_URL}/bookings/stats`),
                 fetch(`${API_URL}/bookings/all`),
                 fetch(`${API_URL}/shows/active`),
+                getAllMovies(),
             ]);
 
             if (!statsRes.ok) throw new Error(`Stats: ${statsRes.status}`);
@@ -421,6 +432,7 @@ function Dashboard() {
                     .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0))
             );
             setShows(Array.isArray(showsData) ? showsData : []);
+            setAllMovies(Array.isArray(moviesData) ? moviesData : []); // ★ FIX
             setLastUpdated(new Date());
         } catch (err) {
             console.error("Dashboard load error:", err);
@@ -549,7 +561,7 @@ function Dashboard() {
                     </div>
                 )}
 
-                {/* ── Primary Stat Cards - Responsive grid ── */}
+                {/* ── Primary Stat Cards ── */}
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-8">
                     <StatCard
                         title="Total Revenue"
@@ -587,7 +599,7 @@ function Dashboard() {
                     />
                 </div>
 
-                {/* ── Secondary Stats Row - Responsive ── */}
+                {/* ── Secondary Stats Row ── */}
                 <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-8">
                     {[
                         { label: "Confirmed", value: stats?.completedBookings ?? 0, color: "text-green-400", icon: CheckCircleIcon },
@@ -718,7 +730,8 @@ function Dashboard() {
                                 ))
                             ) : shows.length > 0 ? (
                                 shows.map((show, i) => {
-                                    const movie = resolveMovie(show.movieId);
+                                    // ★ FIX: pass allMovies to resolveMovie
+                                    const movie = resolveMovie(show.movieId, allMovies);
                                     const booked = show.occupiedSeatsCount ?? 0;
                                     const total = getTotalSeatsForShow(show);
                                     const occupancy = calculateOccupancy(booked, total);
