@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { dummyShowsData, dummyDateTimeData } from "../assets/assets";
 import { getAllMovies } from "../lib/movieStore";
-const API_URL = import.meta.env.VITE_API_URL || "https://tickethub-api-m6x7.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  MovieChatbot — AI assistant for TixRush
