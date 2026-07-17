@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { dummyShowsData, dummyDateTimeData } from "../assets/assets";
 import { getAllMovies } from "../lib/movieStore";
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "https://tickethub-api-m6x7.onrender.com"
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  MovieChatbot — AI assistant for TixRush
@@ -219,7 +219,7 @@ export default function MovieChatbot() {
         content: m.content,
       }));
 
-      const res = await fetch(`${API_URL}/api/chat`, {
+      const res = await fetch(`${API_URL}/chat`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
