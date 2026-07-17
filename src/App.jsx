@@ -22,6 +22,7 @@ import Theaters from './AllPages/Theaters';
 import AddMovie from './AllPages/Admin/Addmovie';
 import ListMovies from './AllPages/Admin/ListMovies';
 import ListBookings from './AllPages/Admin/ListBookings';
+import MovieChatbot from './Components/MovieChatbot'; // ← Import MovieChatbot
 
 function App() {
 
@@ -63,6 +64,7 @@ function App() {
         <Route path="*"                         element={<Navigate to={isSignedIn ? "/home" : "/"} replace />} />
       </Routes>
       {showNavFooter && <Footer />}
+      <MovieChatbot />   {/* ← Added MovieChatbot component */}
     </>
   );
 }
