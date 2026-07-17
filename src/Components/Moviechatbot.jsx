@@ -56,7 +56,7 @@ const buildShowtimeSummary = () => {
     .join("\n");
 };
 
-const SYSTEM_PROMPT = () => `You are TixBot, the friendly AI assistant for TixRush — an Indian movie ticket booking platform. You help users discover movies, check showtimes, understand pricing, and navigate the booking process.
+const SYSTEM_PROMPT = () => `You are TicketHub, the friendly AI assistant for TicketHub — an Indian movie ticket booking platform. You help users discover movies, check showtimes, understand pricing, and navigate the booking process.
 
 ## Your personality
 - Warm, enthusiastic about movies, concise
@@ -178,7 +178,7 @@ export default function MovieChatbot() {
   const [messages, setMessages] = useState([
     {
       role:    "assistant",
-      content: `Hey${user?.firstName ? ` ${user.firstName}` : ""}! 👋 I'm TixBot, your TixRush movie assistant.\n\nI can help you find movies, check showtimes, understand pricing, or guide you through booking. What would you like to know? 🎬`,
+      content: `Hey${user?.firstName ? ` ${user.firstName}` : ""}! 👋 I'm Assistant Bot, your TicketHub movie assistant.\n\nI can help you find movies, check showtimes, understand pricing, or guide you through booking. What would you like to know? 🎬`,
     },
   ]);
   const [input,    setInput]    = useState("");
@@ -309,7 +309,7 @@ export default function MovieChatbot() {
               <FilmIcon className="w-4 h-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-semibold">TixBot</p>
+              <p className="text-white text-sm font-semibold">Assistant Bot</p>
               <p className="text-green-400 text-xs flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
                 Online · AI Assistant
@@ -395,7 +395,7 @@ export default function MovieChatbot() {
 
           {/* Footer */}
           <div className="text-center pb-2 flex-shrink-0">
-            <p className="text-gray-700 text-xs">Powered by Claude AI · TixRush</p>
+            <p className="text-gray-700 text-xs">Powered by Claude AI · TicketHub</p>
           </div>
         </div>
       )}
