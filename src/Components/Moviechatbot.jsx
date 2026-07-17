@@ -7,11 +7,11 @@ import {
   BotIcon,
   UserIcon,
   FilmIcon,
-  TicketIcon,
   RefreshCwIcon,
 } from "lucide-react";
 import { dummyShowsData, dummyDateTimeData } from "../assets/assets";
 import { getAllMovies } from "../lib/movieStore";
+const API_URL = import.meta.env.VITE_API_URL || "https://tickethub-api-m6x7.onrender.com";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  MovieChatbot — AI assistant for TixRush
@@ -219,30 +219,37 @@ export default function MovieChatbot() {
         content: m.content,
       }));
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch(`${API_URL}/api/chat`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          model:      "claude-sonnet-4-6",
-          max_tokens: 400,
-          system:     SYSTEM_PROMPT(),
-          messages:   history,
-        }),
-      });
+            messages: history,
+    }),
+    });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err?.error?.message ?? `API error ${res.status}`);
       }
 
-      const data    = await res.json();
-      const botText = data?.content?.[0]?.text ?? "Sorry, I couldn't process that. Please try again.";
+      const data = await res.json();
+        if (!data.success) {
+        throw new Error(data.reply);
+        }
 
-      setMessages((prev) => [...prev, { role: "assistant", content: botText }]);
+        setMessages((prev) => [
+        ...prev,
+        {
+            role: "assistant",
+            content: data.reply,
+    },
+    ]);
 
     } catch (err) {
-      console.error("TixBot error:", err);
-      setError("Something went wrong. Please try again.");
+      console.error("TicketHub error:", err);
+      setError(err.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
