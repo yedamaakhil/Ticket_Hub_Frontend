@@ -219,7 +219,7 @@ export default function MovieChatbot() {
         content: m.content,
       }));
 
-      const res = await fetch(`${API_URL}/chat`, {
+      const res = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
