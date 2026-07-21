@@ -1,14 +1,7 @@
-// ─────────────────────────────────────────────────────────────────────────────
-//  movieStore.js — now backed by the real database via the backend API.
-//  Movies added by admin are visible to every user on every device immediately,
-//  since they're fetched from the server instead of a per-browser localStorage.
-// ─────────────────────────────────────────────────────────────────────────────
-
 import { dummyShowsData } from "../assets/assets";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
-/** Fetch admin-added movies from the backend */
 export const fetchDbMovies = async () => {
   try {
     const res = await fetch(`${API_URL}/movies`);
@@ -20,10 +13,9 @@ export const fetchDbMovies = async () => {
   }
 };
 
-/**
- * Returns ALL movies: base dummyShowsData + DB movies (admin-added).
- * This is async now — callers must await it.
- */
+// ★ Static movies returned instantly, no network wait
+export const getStaticMovies = () => dummyShowsData;
+
 export const getAllMovies = async () => {
   const dbMovies = await fetchDbMovies();
   return [...dbMovies, ...dummyShowsData];
@@ -34,7 +26,6 @@ export const findMovieById = async (id) => {
   return all.find((m) => String(m.id) === String(id) || String(m._id) === String(id));
 };
 
-/** Add a new movie via the backend */
 export const addMovie = async (movieData) => {
   const res = await fetch(`${API_URL}/movies`, {
     method: "POST",
@@ -45,7 +36,6 @@ export const addMovie = async (movieData) => {
   return await res.json();
 };
 
-/** Update an existing admin-added movie via the backend */
 export const updateMovie = async (id, updatedData) => {
   const res = await fetch(`${API_URL}/movies/${id}`, {
     method: "PUT",
@@ -56,17 +46,11 @@ export const updateMovie = async (id, updatedData) => {
   return await res.json();
 };
 
-/** Remove a movie via the backend (cannot remove base dummy movies) */
 export const removeMovie = async (id) => {
   const res = await fetch(`${API_URL}/movies/${id}`, { method: "DELETE" });
   return res.ok;
 };
 
-/** Count of admin-added (DB) movies */
 export const getStoredMovieCount = async () => (await fetchDbMovies()).length;
-
-/** Total movies count (base + DB) */
 export const getTotalMovieCount = async () => (await getAllMovies()).length;
-
-/** Admin-added movies only (for the "Show Added" list in AddMovie.jsx) */
 export const getStoredMovies = async () => await fetchDbMovies();
